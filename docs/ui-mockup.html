@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mycel — UI Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0e0d0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Lora', Georgia, serif;
+  padding: 2rem 1rem;
+}
+
+/* Phone frame */
+.phone {
+  width: 375px;
+  height: 812px;
+  background: #f5f0e8;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 40px 80px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+/* Status bar */
+.statusbar {
+  height: 44px;
+  background: #f5f0e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 28px;
+  position: relative;
+  z-index: 10;
+}
+
+.statusbar-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #3d3228;
+}
+
+.statusbar-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.statusbar-icons span {
+  font-size: 0.7rem;
+  color: #3d3228;
+}
+
+/* Top nav */
+.topnav {
+  height: 52px;
+  background: #f5f0e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  position: relative;
+  z-index: 10;
+}
+
+.app-name {
+  font-family: 'Lora', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #8b6535;
+  letter-spacing: 0.06em;
+}
+
+.nav-icons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.nav-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.nav-icon:hover { background: rgba(139,101,53,0.1); }
+
+/* Map canvas area */
+.map-area {
+  position: relative;
+  height: 480px;
+  overflow: hidden;
+  background: #ede7d9;
+}
+
+.map-area::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 40% 55%, rgba(139,101,53,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 75% 25%, rgba(122,158,126,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Node labels overlay */
+.node-labels {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.node-label {
+  position: absolute;
+  transform: translate(-50%, 0);
+  text-align: center;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.node-label .name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: #5a4535;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  margin-top: 4px;
+  display: block;
+}
+
+.node-label .tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem;
+  color: #8b6535;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* Mood dot indicator */
+.mood-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
+.mood-calm { background: #7a9e7e; }
+.mood-stretched { background: #c8a040; }
+.mood-unavailable { background: #b07060; }
+
+/* Panel that slides up on node click */
+.detail-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f5f0e8;
+  border-radius: 20px 20px 0 0;
+  padding: 0 22px 24px;
+  z-index: 20;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+}
+
+.detail-panel.open {
+  transform: translateY(0);
+}
+
+.panel-handle {
+  width: 36px;
+  height: 4px;
+  background: #c8b8a0;
+  border-radius: 2px;
+  margin: 12px auto 16px;
+}
+
+.panel-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.panel-info {}
+.panel-name {
+  font-family: 'Lora', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #3d2e1e;
+  margin-bottom: 2px;
+}
+.panel-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: #8b6535;
+  letter-spacing: 0.1em;
+}
+
+.panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.tag-chip {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.tag-offer {
+  background: rgba(122,158,126,0.15);
+  color: #4a7a4e;
+  border: 1px solid rgba(122,158,126,0.3);
+}
+
+.tag-need {
+  background: rgba(200,160,64,0.12);
+  color: #8b6535;
+  border: 1px solid rgba(200,160,64,0.25);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  flex: 1;
+  padding: 11px 0;
+  border-radius: 10px;
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #8b6535;
+  color: #f5f0e8;
+}
+.btn-primary:hover { background: #7a5828; }
+
+.btn-secondary {
+  background: rgba(139,101,53,0.1);
+  color: #8b6535;
+  border: 1px solid rgba(139,101,53,0.2);
+}
+.btn-secondary:hover { background: rgba(139,101,53,0.18); }
+
+/* Bottom bar - your own presence */
+.bottombar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 116px;
+  background: #f5f0e8;
+  border-top: 1px solid rgba(139,101,53,0.12);
+  padding: 14px 22px 28px;
+  z-index: 5;
+}
+
+.your-presence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.your-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.your-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(139,101,53,0.15);
+  border: 2px solid rgba(139,101,53,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.your-name {
+  font-family: 'Lora', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #3d2e1e;
+}
+
+.your-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: #8b7060;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.mood-picker {
+  display: flex;
+  gap: 6px;
+}
+
+.mood-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139,101,53,0.2);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mood-btn.active {
+  background: rgba(122,158,126,0.2);
+  border-color: #7a9e7e;
+}
+
+.mood-btn:hover { background: rgba(139,101,53,0.08); }
+
+/* Soft presence hint text */
+.presence-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.56rem;
+  color: #b0987a;
+  letter-spacing: 0.12em;
+  text-align: center;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+
+/* Overlay when panel open */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 15;
+  pointer-events: none;
+  transition: background 0.3s;
+}
+.overlay.active {
+  background: rgba(0,0,0,0.2);
+  pointer-events: auto;
+}
+
+/* Annotation labels outside phone */
+.annotations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div style="position:relative; display:flex; gap:3rem; align-items:center; flex-wrap:wrap; justify-content:center;">
+
+  <!-- Left annotation -->
+  <div style="width:160px; display:flex; flex-direction:column; gap:28px; padding-bottom:60px;">
+    <div style="text-align:right;">
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#7a9e7e; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">ambient map</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">the main view — no feed, just presence</div>
+    </div>
+    <div style="text-align:right; margin-top:60px;">
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#c8a96e; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">trust edges</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">thicker = more exchange history</div>
+    </div>
+    <div style="text-align:right; margin-top:80px;">
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#b07060; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">mood signal</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">coarse only — available, stretched, away</div>
+    </div>
+  </div>
+
+  <!-- Phone -->
+  <div class="phone" id="phone">
+
+    <div class="statusbar">
+      <span class="statusbar-time">09:14</span>
+      <div class="statusbar-icons">
+        <span>●●●</span>
+        <span>WiFi</span>
+        <span>⬛</span>
+      </div>
+    </div>
+
+    <div class="topnav">
+      <div class="app-name">mycel</div>
+      <div class="nav-icons">
+        <div class="nav-icon" title="Search">🔍</div>
+        <div class="nav-icon" title="Settings">⚙</div>
+      </div>
+    </div>
+
+    <div class="map-area" id="mapArea">
+      <canvas id="mycelCanvas" width="375" height="480"></canvas>
+
+      <div class="node-labels" id="nodeLabels"></div>
+
+      <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detailPanel">
+        <div class="panel-handle"></div>
+        <div class="panel-person">
+          <div class="panel-avatar" id="panelAvatar"></div>
+          <div class="panel-info">
+            <div class="panel-name" id="panelName"></div>
+            <div class="panel-meta" id="panelMeta"></div>
+          </div>
+        </div>
+        <div class="panel-tags" id="panelTags"></div>
+        <div class="panel-actions">
+          <button class="btn btn-primary">↗ send signal</button>
+          <button class="btn btn-secondary">♡ hearts</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottombar">
+      <div class="your-presence">
+        <div class="your-info">
+          <div class="your-avatar">🌱</div>
+          <div>
+            <div class="your-name">Björn</div>
+            <div class="your-status"><span class="mood-dot mood-calm"></span>available · tools, ideas</div>
+          </div>
+        </div>
+        <div class="mood-picker">
+          <button class="mood-btn active" title="available">🌿</button>
+          <button class="mood-btn" title="stretched">〰</button>
+          <button class="mood-btn" title="away">🌑</button>
+        </div>
+      </div>
+      <div class="presence-hint">presence shared with your network · updates every 30 min</div>
+    </div>
+
+  </div>
+
+  <!-- Right annotation -->
+  <div style="width:160px; display:flex; flex-direction:column; gap:28px; padding-top:80px;">
+    <div>
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#7a9e7e; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">place node</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">workshop, garden — not a person</div>
+    </div>
+    <div style="margin-top:60px;">
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#c8a96e; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">tap a node</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">see offers, needs, send a quiet signal</div>
+    </div>
+    <div style="margin-top:60px;">
+      <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:#8b6535; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:4px;">your presence</div>
+      <div style="font-family:'Lora',serif; font-size:0.82rem; color:#a09080; line-height:1.5;">quiet by default, expires in 1h</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById('mycelCanvas');
+const ctx = canvas.getContext('2d');
+const W = 375, H = 480;
+
+// Nodes
+const nodes = [
+  { id: 'you',     x: 185, y: 290, r: 22, emoji: '🌱', name: 'you',          trust: 1.0, mood: 'calm',        offers: [],              needs: [],              isYou: true,  isPlace: false },
+  { id: 'maja',    x: 105, y: 180, r: 18, emoji: '🏠', name: 'Maja',         trust: 0.9, mood: 'calm',        offers: ['tools','bike'], needs: [],              isYou: false, isPlace: false },
+  { id: 'erik',    x: 270, y: 160, r: 15, emoji: '🧑', name: 'Erik',         trust: 0.6, mood: 'stretched',   offers: ['cooking'],      needs: ['transport'],   isYou: false, isPlace: false },
+  { id: 'stuga',   x: 290, y: 310, r: 16, emoji: '🛖', name: 'Stuga',        trust: 0.7, mood: 'calm',        offers: ['space','tools'],needs: [],              isYou: false, isPlace: true  },
+  { id: 'lena',    x: 130, y: 380, r: 12, emoji: '👤', name: 'Lena',         trust: 0.35,mood: 'calm',        offers: ['seeds'],        needs: [],              isYou: false, isPlace: false },
+  { id: 'ravi',    x: 60,  y: 280, r: 10, emoji: '🌑', name: 'Ravi',         trust: 0.15,mood: 'unavailable', offers: [],               needs: [],              isYou: false, isPlace: false },
+];
+
+// Edges (pairs of node ids)
+const edges = [
+  { a: 'you', b: 'maja',  strength: 0.9 },
+  { a: 'you', b: 'erik',  strength: 0.6 },
+  { a: 'you', b: 'stuga', strength: 0.7 },
+  { a: 'you', b: 'lena',  strength: 0.35 },
+  { a: 'you', b: 'ravi',  strength: 0.15 },
+  { a: 'maja', b: 'stuga',strength: 0.5 },
+  { a: 'erik', b: 'stuga',strength: 0.4 },
+];
+
+function nodeById(id) { return nodes.find(n => n.id === id); }
+
+// Breathing animation
+let t = 0;
+
+function moodColor(mood) {
+  if (mood === 'calm') return '#7a9e7e';
+  if (mood === 'stretched') return '#c8a040';
+  return '#b07060';
+}
+
+function drawEdge(a, b, strength) {
+  const breathe = 0.85 + 0.15 * Math.sin(t * 0.018 + a.x * 0.05);
+  const alpha = strength * breathe;
+  const width = 0.8 + strength * 3.5;
+
+  ctx.beginPath();
+  // Slight organic curve
+  const mx = (a.x + b.x) / 2 + (b.y - a.y) * 0.08;
+  const my = (a.y + b.y) / 2 - (b.x - a.x) * 0.08;
+  ctx.moveTo(a.x, a.y);
+  ctx.quadraticCurveTo(mx, my, b.x, b.y);
+
+  ctx.strokeStyle = `rgba(139,101,53,${alpha * 0.55})`;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Soft glow on strong edges
+  if (strength > 0.6) {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    ctx.strokeStyle = `rgba(200,169,110,${alpha * 0.15})`;
+    ctx.lineWidth = width * 3;
+    ctx.stroke();
+  }
+}
+
+function drawNode(node) {
+  const breathe = 1 + 0.04 * Math.sin(t * 0.02 + node.x * 0.1);
+  const r = node.r * breathe;
+
+  // Outer glow for available nodes
+  if (node.mood !== 'unavailable') {
+    const grad = ctx.createRadialGradient(node.x, node.y, r * 0.5, node.x, node.y, r * 2.5);
+    grad.addColorStop(0, `rgba(${node.isYou ? '139,101,53' : '122,158,126'},0.18)`);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r * 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // Node circle
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+
+  if (node.isYou) {
+    ctx.fillStyle = '#f5efe0';
+    ctx.strokeStyle = '#8b6535';
+    ctx.lineWidth = 2.5;
+  } else if (node.isPlace) {
+    ctx.fillStyle = '#e8dfc8';
+    ctx.strokeStyle = `${moodColor(node.mood)}`;
+    ctx.lineWidth = 1.5;
+  } else {
+    ctx.fillStyle = '#f0ebe0';
+    ctx.strokeStyle = `${moodColor(node.mood)}`;
+    ctx.lineWidth = node.trust > 0.5 ? 2 : 1;
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  // Mood ring pulse for stretched
+  if (node.mood === 'stretched') {
+    const pulse = 0.4 + 0.4 * Math.sin(t * 0.05 + node.x);
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(200,160,64,${pulse * 0.5})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Subtle grain texture feel via very faint dots
+  ctx.globalAlpha = 0.03;
+  for (let i = 0; i < 120; i++) {
+    ctx.beginPath();
+    ctx.arc(
+      Math.sin(i * 137.5) * W * 0.5 + W * 0.5,
+      Math.cos(i * 97.3) * H * 0.5 + H * 0.5,
+      0.8, 0, Math.PI * 2
+    );
+    ctx.fillStyle = '#8b6535';
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Edges
+  edges.forEach(e => {
+    drawEdge(nodeById(e.a), nodeById(e.b), e.strength);
+  });
+
+  // Nodes
+  nodes.forEach(n => drawNode(n));
+
+  t++;
+  requestAnimationFrame(draw);
+}
+
+draw();
+
+// Build HTML labels
+const labelsEl = document.getElementById('nodeLabels');
+nodes.forEach(node => {
+  if (node.isYou) return; // you is shown in bottom bar
+
+  const el = document.createElement('div');
+  el.className = 'node-label';
+  el.style.left = node.x + 'px';
+  el.style.top = (node.y + node.r + 4) + 'px';
+
+  const moodDotColor = node.mood === 'calm' ? '#7a9e7e' : node.mood === 'stretched' ? '#c8a040' : '#b07060';
+  el.innerHTML = `
+    <span class="name">
+      <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${moodDotColor};margin-right:3px;vertical-align:middle;"></span>${node.name}
+    </span>
+    ${node.offers.length ? `<span class="tag">↑ ${node.offers[0]}</span>` : ''}
+    ${node.needs.length ? `<span class="tag" style="color:#c8a040;">↓ ${node.needs[0]}</span>` : ''}
+  `;
+  el.onclick = () => openPanel(node);
+  labelsEl.appendChild(el);
+});
+
+// Panel interactions
+function openPanel(node) {
+  document.getElementById('panelAvatar').textContent = node.emoji;
+  document.getElementById('panelAvatar').style.background = node.isPlace ? 'rgba(139,101,53,0.1)' : 'rgba(122,158,126,0.15)';
+  document.getElementById('panelName').textContent = node.name;
+
+  const moodLabel = node.mood === 'calm' ? 'available' : node.mood === 'stretched' ? 'stretched' : 'away';
+  const trustPct = Math.round(node.trust * 100);
+  document.getElementById('panelMeta').textContent = `${moodLabel}  ·  trust ${trustPct}%  ·  ${node.isPlace ? 'place' : 'person'}`;
+
+  const tagsEl = document.getElementById('panelTags');
+  tagsEl.innerHTML = '';
+  node.offers.forEach(o => {
+    const c = document.createElement('span');
+    c.className = 'tag-chip tag-offer';
+    c.textContent = '↑ ' + o;
+    tagsEl.appendChild(c);
+  });
+  node.needs.forEach(n => {
+    const c = document.createElement('span');
+    c.className = 'tag-chip tag-need';
+    c.textContent = '↓ ' + n;
+    tagsEl.appendChild(c);
+  });
+  if (!node.offers.length && !node.needs.length) {
+    const c = document.createElement('span');
+    c.className = 'tag-chip';
+    c.style.cssText = 'background:rgba(139,101,53,0.07);color:#8b7060;border:1px solid rgba(139,101,53,0.15);';
+    c.textContent = 'no signals right now';
+    tagsEl.appendChild(c);
+  }
+
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('active');
+}
+
+function closePanel() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+}
+
+// Mood buttons
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
