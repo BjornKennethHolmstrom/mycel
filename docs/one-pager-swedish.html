@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mycel</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil: #1a1510;
+    --humus: #2d2419;
+    --mycel: #c8a96e;
+    --spore: #e8d5a3;
+    --moss: #7a9e7e;
+    --root: #8b6f4e;
+    --mist: #d4c9b0;
+    --glow: rgba(200, 169, 110, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--soil);
+    color: var(--mist);
+    font-family: 'Lora', Georgia, serif;
+    min-height: 100vh;
+    padding: 1.6rem 2rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(122,158,126,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(200,169,110,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 1.6rem;
+    animation: fadeUp 1s ease both;
+  }
+
+  .title {
+    font-family: 'Lora', serif;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 600;
+    color: var(--mycel);
+    letter-spacing: 0.08em;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 300;
+    color: var(--root);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+
+  .section {
+    margin-bottom: 1.4rem;
+    animation: fadeUp 1s ease both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 400;
+    color: var(--moss);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(122,158,126,0.3), transparent);
+  }
+
+  .section p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--mist);
+  }
+
+  .section p + p {
+    margin-top: 0.5rem;
+  }
+
+  em {
+    color: var(--spore);
+    font-style: italic;
+  }
+
+  strong {
+    color: var(--mycel);
+    font-weight: 600;
+  }
+
+  .shovel {
+    border-left: 2px solid var(--moss);
+    padding: 0.6rem 1.2rem;
+    background: rgba(122,158,126,0.06);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--spore);
+    line-height: 1.5;
+  }
+
+  .diagram {
+    margin: 1rem 0;
+    padding: 1.2rem 1.5rem;
+    background: var(--humus);
+    border-radius: 12px;
+    border: 1px solid rgba(200,169,110,0.12);
+  }
+
+  .diagram-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--root);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .layer {
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .layer-ambient {
+    background: rgba(122,158,126,0.1);
+    border: 1px solid rgba(122,158,126,0.25);
+  }
+
+  .layer-active {
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.2);
+  }
+
+  .layer-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .layer-content {}
+
+  .layer-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .layer-ambient .layer-name { color: var(--moss); }
+  .layer-active .layer-name { color: var(--mycel); }
+
+  .layer-desc {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--mist);
+    opacity: 0.85;
+  }
+
+  .growth {
+    border-top: 1px solid rgba(200,169,110,0.1);
+    padding-top: 1rem;
+  }
+
+  .growth-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--root);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 0.8rem;
+  }
+
+  .nodes {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .node-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .node {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    position: relative;
+    transition: transform 0.3s ease;
+    cursor: default;
+  }
+
+  .node:hover { transform: scale(1.15); }
+
+  .node-strong {
+    background: rgba(200,169,110,0.2);
+    border: 2px solid var(--mycel);
+    box-shadow: 0 0 12px rgba(200,169,110,0.2);
+  }
+
+  .node-medium {
+    background: rgba(122,158,126,0.15);
+    border: 2px solid rgba(122,158,126,0.5);
+  }
+
+  .node-faint {
+    background: rgba(139,111,78,0.1);
+    border: 1.5px solid rgba(139,111,78,0.3);
+  }
+
+  .node-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--root);
+    letter-spacing: 0.1em;
+  }
+
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0.3rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .line-strong {
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(to right, var(--mycel), rgba(200,169,110,0.4));
+    border-radius: 2px;
+    margin-bottom: 0.2rem;
+  }
+
+  .line-medium {
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(to right, rgba(122,158,126,0.6), rgba(122,158,126,0.2));
+    border-radius: 2px;
+    margin-bottom: 0.2rem;
+  }
+
+  .line-faint {
+    width: 24px;
+    height: 1px;
+    background: rgba(139,111,78,0.3);
+    margin-bottom: 0.2rem;
+  }
+
+  .conn-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--root);
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+
+  .footer {
+    margin-top: 1.4rem;
+    text-align: center;
+    animation: fadeUp 1s ease 0.6s both;
+  }
+
+  .footer-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--root);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 2rem 1.2rem; }
+    .nodes { gap: 0.3rem; }
+    .connector { padding: 0 0.1rem; }
+    .line-strong, .line-medium, .line-faint { width: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="title">Mycel</div>
+    <div class="subtitle">koordinering som växer som en skog</div>
+  </header>
+
+  <section class="section">
+    <div class="section-label">frågan</div>
+    <p>Tänk om en liten grupp människor kunde samordna vardagslivet — verktyg, mat, en stormvarning — med en tyst app som sedan <em>spred sig på egen hand</em> till samhällen de aldrig träffat, helt enkelt för att den var användbar?</p>
+  </section>
+
+  <section class="section">
+    <div class="section-label">metaforen</div>
+    <p>Under varje skog finns ett mycelnätverk — ingen central, ingen chef, ingen server. Det leder näring från träd med överskott till träd i behov, läker sig självt när det skadas och har upprätthållit planetär motståndskraft i hundratals miljoner år.</p>
+    <p>Mycel fungerar på samma sätt: kopplingar stärks där verkligt utbyte sker, försvagas där det inte gör det, och fortsätter att fungera lokalt när internet går ner. <strong>Skogen behöver inget tillstånd för att växa.</strong></p>
+  </section>
+
+  <section class="section">
+    <div class="section-label">levande om sex månader</div>
+    <p>En liten grupp människor som känner varandra använder den första versionen. De kan se en mjuk karta över vilka som finns i närheten och vad de behöver. De samordnar något verkligt — verktyg, en måltid, en reaktion på ett problem. Appen kliver åt sidan efteråt. Den drar inte tillbaka dem. Den väntar helt enkelt, som jord, tills något behöver växa genom den igen. Någon visar den för folk de känner på annan ort. Den sprids, en betrodd koppling i taget.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-label">antiberoendetestet</div>
+    <div class="shovel">Målet är ett verktyg som människor tar upp när de behöver det och lägger ner utan svårighet — som en bra spade.</div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">hur det fungerar</div>
+
+    <div class="diagram">
+      <div class="diagram-title">Signalering i två hastigheter</div>
+
+      <div class="layers">
+        <div class="layer layer-ambient">
+          <div class="layer-icon">🌿</div>
+          <div class="layer-content">
+            <div class="layer-name">Omgivningslager — långsamt</div>
+            <div class="layer-desc">En levande karta över närvaro, tillgängliga resurser, stämningen i grannskapet. Inget flöde. Ingen brådska. Uppdateras varsamt, lokalt. Som att veta hur dina grannar har det utan ständig kontakt.</div>
+          </div>
+        </div>
+        <div class="layer layer-active">
+          <div class="layer-icon">⚡</div>
+          <div class="layer-content">
+            <div class="layer-name">Aktivt lager — snabbt</div>
+            <div class="layer-desc">Krypterad direktsamordning — ett behov, ett erbjudande, en krissignal. Dyker upp när något faktiskt kräver handling. Försvinner när det är klart.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="growth">
+        <div class="growth-label">Organisk tillväxt — kopplingar stärks där värde flödar</div>
+        <div class="nodes">
+          <div class="node-group">
+            <div class="node node-strong">🏠</div>
+            <div class="node-label">du</div>
+          </div>
+          <div class="connector">
+            <div class="line-strong"></div>
+            <div class="conn-label">ofta</div>
+          </div>
+          <div class="node-group">
+            <div class="node node-strong">🌱</div>
+            <div class="node-label">granne</div>
+          </div>
+          <div class="connector">
+            <div class="line-medium"></div>
+            <div class="conn-label">ibland</div>
+          </div>
+          <div class="node-group">
+            <div class="node node-medium">🛖</div>
+            <div class="node-label">by</div>
+          </div>
+          <div class="connector">
+            <div class="line-faint"></div>
+            <div class="conn-label">sällan</div>
+          </div>
+          <div class="node-group">
+            <div class="node node-faint">🌍</div>
+            <div class="node-label">bioregion</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-text">Global Governance Frameworks &nbsp;·&nbsp; Björn K. Holmström &nbsp;·&nbsp; 2026</div>
+  </footer>
+
+</div>
+</body>
+</html>
