@@ -3,9 +3,9 @@
 const CACHE_NAME = 'mycel-v1';
 
 const PRECACHE_ASSETS = [
-  '/',
-  '/app',
-  '/favicon.svg'
+  '/mycel/',
+  '/mycel/app',
+  '/mycel/favicon.svg'
 ];
 
 self.addEventListener('install', (event) => {
