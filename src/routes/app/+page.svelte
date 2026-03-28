@@ -69,6 +69,12 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
 		client?.destroy();
 	});
 
+ let debugLog = $state<string[]>([]);
+ function log(msg: string) {
+     debugLog = [...debugLog, msg];
+     log(msg);
+ }
+
  function handleAddPeer(pubkey: string, name: string) {
   trustStore.record(pubkey, 'vouch');
   updatePeer(pubkey, {
@@ -93,7 +99,7 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
      if (client) {
          try {
              await client.publishPresence(presence);
-             console.log('Presence published successfully');
+             log('Presence published successfully');
          } catch (err) {
              console.error('Failed to publish presence:', err);
          }
@@ -140,11 +146,11 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
 
      if (peerPubkeys.length === 0) return;
 
-     console.log('Starting subscriptions for pubkeys:', peerPubkeys);
+     log('Starting subscriptions for pubkeys:', peerPubkeys);
 
      // Subscribe to presence from all known real peers
      client.subscribePresence(peerPubkeys, (pubkey, presence) => {
-         console.log('Received presence from:', pubkey, presence);
+         log('Received presence from:', pubkey, presence);
          updatePresence(pubkey, presence);
          trustStore.record(pubkey, 'presence_overlap');
          updatePeer(pubkey, { trustScore: trustStore.score(pubkey) });
