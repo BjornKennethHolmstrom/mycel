@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'mycel-v2';
+const CACHE_NAME = 'mycel-v3';
 
 const PRECACHE_ASSETS = [
   '/mycel/',

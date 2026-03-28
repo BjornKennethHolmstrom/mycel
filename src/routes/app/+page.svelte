@@ -60,9 +60,9 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
 
      // Start live relay subscriptions
      startSubscriptions();
-
      connectionStatus.set('connected');
      statusText = 'connected';
+     persistPeers();
  });
 
 	onDestroy(() => {
@@ -76,18 +76,15 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
  }
 
  function handleAddPeer(pubkey: string, name: string) {
-  trustStore.record(pubkey, 'vouch');
-  updatePeer(pubkey, {
-   name: name || pubkey.slice(0, 8) + '…',
-   trustScore: trustStore.score(pubkey)
-  });
-  toastMessage = $t('addPeer.peerAdded', { name: name || pubkey.slice(0, 8) });
-
-  // Also publish a vouch event to relays
-  client?.publishVouch(pubkey);
-
-  // Restart subscriptions to include the new peer
-  startSubscriptions();
+     trustStore.record(pubkey, 'vouch');
+     updatePeer(pubkey, {
+         name: name || pubkey.slice(0, 8) + '…',
+         trustScore: trustStore.score(pubkey)
+     });
+     toastMessage = $t('addPeer.peerAdded', { name: name || pubkey.slice(0, 8) });
+     client?.publishVouch(pubkey);
+     startSubscriptions();
+     persistPeers();
  }
 
 	function handlePeerSelect(peer: Peer) {
@@ -115,6 +112,7 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
     const name = selectedPeer?.name || 'them';
     toastMessage = $t('peer.gratitudeSent', { name });
     selectedPeer = null;
+    persistPeers();
    } catch (err) {
     console.error('Failed to send gratitude:', err);
    }
@@ -150,10 +148,10 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } fr
 
      // Subscribe to presence from all known real peers
      client.subscribePresence(peerPubkeys, (pubkey, presence) => {
-         log('Received presence from:', pubkey, presence);
          updatePresence(pubkey, presence);
          trustStore.record(pubkey, 'presence_overlap');
          updatePeer(pubkey, { trustScore: trustStore.score(pubkey) });
+         persistPeers();
      });
 
      // Subscribe to gratitude directed at us
