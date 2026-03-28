@@ -8,9 +8,9 @@ import { SimplePool } from 'nostr-tools/pool';
 import { EVENT_KINDS, type PresenceData } from '$lib/types';
 
 const DEFAULT_RELAYS = [
-	'wss://relay.damus.io',
 	'wss://nos.lol',
-	'wss://relay.nostr.band'
+	'wss://relay.nostr.band',
+	'wss://relay.snort.social'
 ];
 
 export class NostrClient {
