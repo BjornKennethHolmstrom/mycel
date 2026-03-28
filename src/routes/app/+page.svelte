@@ -87,26 +87,6 @@
      }
  }
 
- async function handlePublishPresence(presence: PresenceData, name: string) {
-     myPresence = presence;
-     saveMyPresence(presence);
-
-     if (name !== myDisplayName) {
-         myDisplayName = name;
-         localStorage.setItem('mycel_display_name', name);
-         client?.setDisplayName(name);
-     }
-
-     if (client) {
-         try {
-             await client.publishPresence(presence);
-             log('Presence published successfully');
-         } catch (err) {
-             console.error('Failed to publish presence:', err);
-         }
-     }
- }
-
  function handleAddPeer(pubkey: string, name: string) {
      trustStore.record(pubkey, 'vouch');
      updatePeer(pubkey, {
@@ -123,9 +103,16 @@
 		selectedPeer = peer;
 	}
 
- async function handlePublishPresence(presence: PresenceData) {
+ async function handlePublishPresence(presence: PresenceData, name: string) {
      myPresence = presence;
      saveMyPresence(presence);
+
+     if (name !== myDisplayName) {
+         myDisplayName = name;
+         localStorage.setItem('mycel_display_name', name);
+         client?.setDisplayName(name);
+     }
+
      if (client) {
          try {
              await client.publishPresence(presence);
