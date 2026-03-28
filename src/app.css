@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+:root {
+	--mycel-bg: #0a0f0a;
+	--mycel-surface: #141e14;
+	--mycel-border: #1e2e1e;
+	--mycel-text: #c8d6c0;
+	--mycel-text-dim: #6b7f60;
+	--mycel-accent: #4a7c59;
+	--mycel-accent-bright: #6aad7a;
+	--mycel-urgent: #c47a3a;
+	--mycel-node-available: #5a9e6a;
+	--mycel-node-limited: #8a8e4a;
+	--mycel-node-unavailable: #4a4a4a;
+}
+
+body {
+	background: var(--mycel-bg);
+	color: var(--mycel-text);
+	font-family: system-ui, -apple-system, sans-serif;
+	margin: 0;
+	min-height: 100dvh;
+}
