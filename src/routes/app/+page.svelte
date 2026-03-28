@@ -11,7 +11,8 @@
 	import { hasIdentity, loadIdentity } from '$lib/nostr/keys';
 	import { NostrClient } from '$lib/nostr/client';
 	import { trustStore } from '$lib/trust/store';
-import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus, persistPeers } from '$lib/stores/app';
+ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus, persistPeers } from '$lib/stores/app';
+ import { loadPeers } from '$lib/stores/peers';
 	import type { Peer, PresenceData } from '$lib/types';
  import LangSwitcher from '$lib/components/ui/LangSwitcher.svelte';
  import AddPeerPanel from '$lib/components/presence/AddPeerPanel.svelte';
@@ -72,7 +73,7 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus, per
  let debugLog = $state<string[]>([]);
  function log(msg: string) {
      debugLog = [...debugLog, msg];
-     log(msg);
+     console.log(msg);
  }
 
  function handleAddPeer(pubkey: string, name: string) {
@@ -144,7 +145,7 @@ import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus, per
 
      if (peerPubkeys.length === 0) return;
 
-     log('Starting subscriptions for pubkeys:', peerPubkeys);
+     log('Starting subscriptions for pubkeys: ' + peerPubkeys.join(', '));
 
      // Subscribe to presence from all known real peers
      client.subscribePresence(peerPubkeys, (pubkey, presence) => {
