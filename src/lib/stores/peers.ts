@@ -17,18 +17,29 @@ interface StoredPeer {
 }
 
 export function savePeers(peers: Map<string, Peer>) {
-	try {
-		const data: StoredPeer[] = Array.from(peers.values()).map((p) => ({
-			pubkey: p.pubkey,
-			name: p.name,
-			nip05: p.nip05,
-			lastSeen: p.lastSeen,
-			presence: p.presence
-		}));
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-	} catch {
-		// storage full or unavailable
-	}
+    try {
+        const data: StoredPeer[] = [];
+        for (const [, p] of peers) {
+            data.push({
+                pubkey: p.pubkey,
+                name: p.name,
+                nip05: p.nip05,
+                lastSeen: p.lastSeen,
+                presence: p.presence ? {
+                    capacity: p.presence.capacity,
+                    offers: [...p.presence.offers],
+                    needs: [...p.presence.needs],
+                    mood: p.presence.mood,
+                    locationHash: p.presence.locationHash,
+                    expiry: p.presence.expiry,
+                    timestamp: p.presence.timestamp
+                } : undefined
+            });
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+        // storage full, circular ref, or unavailable
+    }
 }
 
 export function loadPeers(): StoredPeer[] {
