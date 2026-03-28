@@ -119,45 +119,53 @@ export class NostrClient {
      await Promise.any(results);
  }
 	/** Subscribe to presence events from a set of pubkeys */
-	subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData) => void) {
-		if (pubkeys.length === 0) return null;
+ subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData) => void) {
+     if (pubkeys.length === 0) return null;
 
-		const now = Math.floor(Date.now() / 1000);
+     const now = Math.floor(Date.now() / 1000);
 
-		const sub = this.pool.subscribeMany(
-			this.relays,
-			[{
-				kinds: [EVENT_KINDS.PRESENCE],
-				authors: pubkeys,
-				since: now - 7200
-			}],
-			{
-				onevent(event) {
-					try {
-						const data = JSON.parse(event.content);
-						if (data.mycel_type !== 'presence') return;
+     console.log('Subscribing to presence on relays:', this.relays);
+     console.log('For authors:', pubkeys);
+     console.log('Since:', now - 7200, '(now:', now, ')');
 
-						const presence: PresenceData = {
-							capacity: data.capacity,
-							offers: data.offers || [],
-							needs: data.needs || [],
-							mood: data.mood,
-							locationHash: data.location_hash,
-							expiry: Number(event.tags.find(t => t[0] === 'expiry')?.[1] || 3600),
-							timestamp: event.created_at
-						};
+     const sub = this.pool.subscribeMany(
+         this.relays,
+         [{
+             kinds: [EVENT_KINDS.PRESENCE],
+             authors: pubkeys,
+             since: now - 7200
+         }],
+         {
+             onevent(event) {
+                 console.log('>>> Presence event received:', event.pubkey.slice(0, 8), event.content.slice(0, 60));
+                 try {
+                     const data = JSON.parse(event.content);
+                     if (data.mycel_type !== 'presence') return;
 
-						onEvent(event.pubkey, presence);
-					} catch {
-						// skip malformed events
-					}
-				}
-			}
-		);
+                     const presence: PresenceData = {
+                         capacity: data.capacity,
+                         offers: data.offers || [],
+                         needs: data.needs || [],
+                         mood: data.mood,
+                         locationHash: data.location_hash,
+                         expiry: Number(event.tags.find(t => t[0] === 'expiry')?.[1] || 3600),
+                         timestamp: event.created_at
+                     };
 
-		this.subscriptions.push(sub);
-		return sub;
-	}
+                     onEvent(event.pubkey, presence);
+                 } catch (err) {
+                     console.log('Failed to parse presence:', err);
+                 }
+             },
+             oneose() {
+                 console.log('Subscription EOSE (end of stored events)');
+             }
+         }
+     );
+
+     this.subscriptions.push(sub);
+     return sub;
+ }
 
 	/** Subscribe to gratitude events directed at a pubkey */
 	subscribeGratitude(pubkey: string, onEvent: (from: string, note: string) => void) {
