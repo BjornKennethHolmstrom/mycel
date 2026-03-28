@@ -19,6 +19,8 @@
 	"presence": {
 		"setPresence": "Ange din närvaro",
 		"updatePresence": "Uppdatera närvaro",
+  "name": "Ditt namn",
+  "namePlaceholder": "Hur andra ser dig",
 		"capacity": "Kapacitet",
 		"mood": "Stämning",
 		"offers": "Jag kan erbjuda",
@@ -47,6 +49,7 @@
  },
 	"peer": {
 		"noPresence": "Ingen närvarosignal just nu.",
+  "tapToRename": "Tryck för att byta namn",
 		"sendGratitude": "Skicka tacksamhet",
 		"gratitudeSent": "tacksamhet skickad till {name}",
   "gratitudeReceived": "tacksamhet mottagen från {name}",

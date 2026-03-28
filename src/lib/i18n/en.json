@@ -19,6 +19,8 @@
 	"presence": {
 		"setPresence": "Set your presence",
 		"updatePresence": "Update presence",
+  "name": "Your name",
+  "namePlaceholder": "How others see you",
 		"capacity": "Capacity",
 		"mood": "Mood",
 		"offers": "I can offer",
@@ -47,6 +49,7 @@
  },
 	"peer": {
 		"noPresence": "No presence signal right now.",
+  "tapToRename": "Tap to rename",
 		"sendGratitude": "Send gratitude",
 		"gratitudeSent": "gratitude sent to {name}",
   "gratitudeReceived": "gratitude received from {name}",

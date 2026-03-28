@@ -1,34 +1,47 @@
 <!--
 	Presence Panel
-	A quiet bottom drawer for setting your presence: capacity, offers, needs, mood.
+	A quiet bottom drawer for setting your presence: name, capacity, offers, needs, mood.
 	Publishes a presence event to relays when you update.
 -->
 <script lang="ts">
- import { t, tv } from '$lib/i18n';
+	import { t, tv } from '$lib/i18n';
 	import { VOCABULARY } from '$lib/types';
 	import type { PresenceData } from '$lib/types';
 
 	interface Props {
 		open: boolean;
 		currentPresence: PresenceData | null;
-		onpublish: (presence: PresenceData) => void;
+		displayName: string;
+		onpublish: (presence: PresenceData, name: string) => void;
 		onclose: () => void;
 	}
 
-	let { open, currentPresence, onpublish, onclose }: Props = $props();
+	let { open, currentPresence, displayName, onpublish, onclose }: Props = $props();
 
- let capacity = $state<'available' | 'limited' | 'unavailable'>(
-  currentPresence?.capacity ?? 'available'
- );
- let mood = $state<'calm' | 'stretched' | 'urgent'>(
-  currentPresence?.mood ?? 'calm'
- );
+	let name = $state(displayName || '');
+	let capacity = $state<'available' | 'limited' | 'unavailable'>(
+		currentPresence?.capacity ?? 'available'
+	);
+	let mood = $state<'calm' | 'stretched' | 'urgent'>(
+		currentPresence?.mood ?? 'calm'
+	);
 	let selectedOffers = $state<Set<string>>(
 		new Set(currentPresence?.offers ?? [])
 	);
 	let selectedNeeds = $state<Set<string>>(
 		new Set(currentPresence?.needs ?? [])
 	);
+
+	// Sync when panel reopens with new props
+	$effect(() => {
+		if (open) {
+			name = displayName || '';
+			capacity = currentPresence?.capacity ?? 'available';
+			mood = currentPresence?.mood ?? 'calm';
+			selectedOffers = new Set(currentPresence?.offers ?? []);
+			selectedNeeds = new Set(currentPresence?.needs ?? []);
+		}
+	});
 
 	function toggleOffer(tag: string) {
 		const next = new Set(selectedOffers);
@@ -52,24 +65,24 @@
 			mood,
 			expiry: 3600,
 			timestamp: Math.floor(Date.now() / 1000)
-		});
+		}, name.trim());
 		onclose();
 	}
- const capacityOptions = [
-  { value: 'available', color: 'var(--mycel-node-available)' },
-  { value: 'limited', color: 'var(--mycel-node-limited)' },
-  { value: 'unavailable', color: 'var(--mycel-node-unavailable)' }
- ] as const;
 
- const moodOptions = [
-  { value: 'calm' },
-  { value: 'stretched' },
-  { value: 'urgent' }
- ] as const;
+	const capacityOptions = [
+		{ value: 'available', color: 'var(--mycel-node-available)' },
+		{ value: 'limited', color: 'var(--mycel-node-limited)' },
+		{ value: 'unavailable', color: 'var(--mycel-node-unavailable)' }
+	] as const;
+
+	const moodOptions = [
+		{ value: 'calm' },
+		{ value: 'stretched' },
+		{ value: 'urgent' }
+	] as const;
 </script>
 
 {#if open}
-	<!-- Backdrop -->
 	<button class="backdrop" onclick={onclose} aria-label="Close panel"></button>
 
 	<div class="panel">
@@ -77,9 +90,20 @@
 			<div class="handle"></div>
 		</div>
 
+		<!-- Display name -->
+		<section>
+			<h3 class="section-label">{$t('presence.name')}</h3>
+			<input
+				type="text"
+				bind:value={name}
+				placeholder={$t('presence.namePlaceholder')}
+				class="name-input"
+			/>
+		</section>
+
 		<!-- Capacity -->
 		<section>
-			<h3 class="section-label">{$t(`presence.capacity`)}</h3>
+			<h3 class="section-label">{$t('presence.capacity')}</h3>
 			<div class="option-row">
 				{#each capacityOptions as opt}
 					<button
@@ -97,7 +121,7 @@
 
 		<!-- Mood -->
 		<section>
-			<h3 class="section-label">{$t(`presence.mood`)}</h3>
+			<h3 class="section-label">{$t('presence.mood')}</h3>
 			<div class="option-row">
 				{#each moodOptions as opt}
 					<button
@@ -113,23 +137,23 @@
 
 		<!-- Offers -->
 		<section>
-			<h3 class="section-label">{$t(`presence.offers`)}</h3>
+			<h3 class="section-label">{$t('presence.offers')}</h3>
 			<div class="tag-grid">
-    {#each VOCABULARY as tag}
-     <button
-      class="tag"
-      class:tag-offer-selected={selectedOffers.has(tag)}
-      onclick={() => toggleOffer(tag)}
-     >
-      {$tv(tag)}
-     </button>
-    {/each}
+				{#each VOCABULARY as tag}
+					<button
+						class="tag"
+						class:tag-offer-selected={selectedOffers.has(tag)}
+						onclick={() => toggleOffer(tag)}
+					>
+						{$tv(tag)}
+					</button>
+				{/each}
 			</div>
 		</section>
 
 		<!-- Needs -->
 		<section>
-			<h3 class="section-label">{$t(`presence.needs`)}</h3>
+			<h3 class="section-label">{$t('presence.needs')}</h3>
 			<div class="tag-grid">
 				{#each VOCABULARY as tag}
 					<button
@@ -204,6 +228,21 @@
 		color: var(--mycel-text-dim);
 		margin-bottom: 0.5rem;
 		font-weight: 400;
+	}
+
+	.name-input {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.5rem;
+		border: 1px solid var(--mycel-border);
+		background: var(--mycel-bg);
+		color: var(--mycel-text);
+		font-size: 0.8125rem;
+		box-sizing: border-box;
+	}
+
+	.name-input::placeholder {
+		color: var(--mycel-text-dim);
 	}
 
 	.option-row {

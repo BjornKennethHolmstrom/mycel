@@ -28,6 +28,7 @@
 	let myPresence = $state<PresenceData | null>(null);
 	let selectedPeer = $state<Peer | null>(null);
  let toastMessage = $state('');
+ let myDisplayName = $state(localStorage.getItem('mycel_display_name') || '');
 
  onMount(() => {
      if (!hasIdentity()) {
@@ -38,8 +39,11 @@
      const identity = loadIdentity()!;
      currentPubkey.set(identity.pk);
 
+     myPresence = loadMyPresence();
+
      client = new NostrClient();
      client.loadKey(identity.sk);
+     client.loadDisplayName();
      connectionStatus.set('connecting');
 
      // Load persisted peers, or create demo data on first run
@@ -70,10 +74,37 @@
 		client?.destroy();
 	});
 
- let debugLog = $state<string[]>([]);
- function log(msg: string) {
-     debugLog = [...debugLog, msg];
-     console.log(msg);
+ function saveMyPresence(presence: PresenceData) {
+     localStorage.setItem('mycel_my_presence', JSON.stringify(presence));
+ }
+
+ function loadMyPresence(): PresenceData | null {
+     try {
+         const raw = localStorage.getItem('mycel_my_presence');
+         return raw ? JSON.parse(raw) : null;
+     } catch {
+         return null;
+     }
+ }
+
+ async function handlePublishPresence(presence: PresenceData, name: string) {
+     myPresence = presence;
+     saveMyPresence(presence);
+
+     if (name !== myDisplayName) {
+         myDisplayName = name;
+         localStorage.setItem('mycel_display_name', name);
+         client?.setDisplayName(name);
+     }
+
+     if (client) {
+         try {
+             await client.publishPresence(presence);
+             log('Presence published successfully');
+         } catch (err) {
+             console.error('Failed to publish presence:', err);
+         }
+     }
  }
 
  function handleAddPeer(pubkey: string, name: string) {
@@ -94,6 +125,7 @@
 
  async function handlePublishPresence(presence: PresenceData) {
      myPresence = presence;
+     saveMyPresence(presence);
      if (client) {
          try {
              await client.publishPresence(presence);
@@ -126,6 +158,11 @@
   return found;
  }
 
+ function handleRenamePeer(pubkey: string, name: string) {
+  updatePeer(pubkey, { name });
+  persistPeers();
+ }
+
  function startSubscriptions() {
      if (!client) return;
 
@@ -148,10 +185,16 @@
      log('Starting subscriptions for pubkeys: ' + peerPubkeys.join(', '));
 
      // Subscribe to presence from all known real peers
-     client.subscribePresence(peerPubkeys, (pubkey, presence) => {
+     client.subscribePresence(peerPubkeys, (pubkey, presence, broadcastName) => {
          updatePresence(pubkey, presence);
          trustStore.record(pubkey, 'presence_overlap');
-         updatePeer(pubkey, { trustScore: trustStore.score(pubkey) });
+         const peer = getPeer(pubkey);
+         const updates: Partial<Peer> = { trustScore: trustStore.score(pubkey) };
+         // Use broadcast name if we don't have a local name set
+         if (broadcastName && (!peer?.name || peer.name === '' || peer.name === pubkey.slice(0, 8) + '…')) {
+             updates.name = broadcastName;
+         }
+         updatePeer(pubkey, updates);
          persistPeers();
      });
 
@@ -278,16 +321,18 @@
 />
 
 <PresencePanel
-	open={presenceOpen}
-	currentPresence={myPresence}
-	onpublish={handlePublishPresence}
-	onclose={() => presenceOpen = false}
+ open={presenceOpen}
+ currentPresence={myPresence}
+ displayName={myDisplayName}
+ onpublish={handlePublishPresence}
+ onclose={() => presenceOpen = false}
 />
 
 <PeerDetail
-	peer={selectedPeer}
-	onclose={() => selectedPeer = null}
-	ongratitude={handleSendGratitude}
+ peer={selectedPeer}
+ onclose={() => selectedPeer = null}
+ ongratitude={handleSendGratitude}
+ onrename={handleRenamePeer}
 />
 
 {#if toastMessage}

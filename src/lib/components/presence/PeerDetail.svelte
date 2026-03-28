@@ -1,20 +1,42 @@
 <!--
 	Peer Detail Panel
 	Shows when you tap a node on the ambient map.
-	Displays presence info, offers, needs, and actions (gratitude, DM).
+	Displays presence info, offers, needs, and actions.
+	Tap the name to rename a peer locally.
 -->
 <script lang="ts">
- import { get } from 'svelte/store';
- import { t, tv } from '$lib/i18n';
+	import { get } from 'svelte/store';
+	import { t, tv } from '$lib/i18n';
 	import type { Peer } from '$lib/types';
 
 	interface Props {
 		peer: Peer | null;
 		onclose: () => void;
 		ongratitude: (pubkey: string) => void;
+		onrename: (pubkey: string, name: string) => void;
 	}
 
-	let { peer, onclose, ongratitude }: Props = $props();
+	let { peer, onclose, ongratitude, onrename }: Props = $props();
+
+	let editing = $state(false);
+	let editName = $state('');
+
+	function startEditing() {
+		editName = peer?.name || '';
+		editing = true;
+	}
+
+function finishEditing() {
+ if (editing && peer) {
+  onrename(peer.pubkey, editName.trim());
+ }
+ editing = false;
+}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') finishEditing();
+		if (e.key === 'Escape') editing = false;
+	}
 
 	function capacityColor(capacity: string | undefined): string {
 		if (capacity === 'available') return 'var(--mycel-node-available)';
@@ -22,14 +44,14 @@
 		return 'var(--mycel-node-unavailable)';
 	}
 
- function timeAgo(timestamp: number): string {
-  const translate = get(t);
-  const seconds = Math.floor(Date.now() / 1000) - timestamp;
-  if (seconds < 60) return translate('peer.justNow');
-  if (seconds < 3600) return translate('peer.minutesAgo', { n: String(Math.floor(seconds / 60)) });
-  if (seconds < 86400) return translate('peer.hoursAgo', { n: String(Math.floor(seconds / 3600)) });
-  return translate('peer.daysAgo', { n: String(Math.floor(seconds / 86400)) });
- }
+	function timeAgo(timestamp: number): string {
+		const translate = get(t);
+		const seconds = Math.floor(Date.now() / 1000) - timestamp;
+		if (seconds < 60) return translate('peer.justNow');
+		if (seconds < 3600) return translate('peer.minutesAgo', { n: String(Math.floor(seconds / 60)) });
+		if (seconds < 86400) return translate('peer.hoursAgo', { n: String(Math.floor(seconds / 3600)) });
+		return translate('peer.daysAgo', { n: String(Math.floor(seconds / 86400)) });
+	}
 </script>
 
 {#if peer}
@@ -44,25 +66,38 @@
 		<div class="peer-header">
 			<div class="peer-node" style="background: {capacityColor(peer.presence?.capacity)}"></div>
 			<div class="peer-info">
-				<span class="peer-name">{peer.name || peer.pubkey.slice(0, 12) + '…'}</span>
+				{#if editing}
+					<input
+						class="name-edit"
+						type="text"
+						bind:value={editName}
+						onblur={finishEditing}
+						onkeydown={handleKeydown}
+						autofocus
+					/>
+				{:else}
+					<button class="peer-name" onclick={startEditing} title={$t('peer.tapToRename')}>
+						{peer.name || peer.pubkey.slice(0, 12) + '…'}
+					</button>
+				{/if}
 				<span class="peer-meta">
-     <span class="capacity-label" style="color: {capacityColor(peer.presence?.capacity)}">
-      {$t(`presence.${peer.presence?.capacity ?? 'unavailable'}`)}
-     </span>
-     {#if peer.presence?.mood}
-      <span class="separator">·</span>
-      <span>{$t(`presence.${peer.presence.mood}`)}</span>
-     {/if}
-     {#if peer.presence?.timestamp}
-      <span class="separator">·</span>
-      <span>{timeAgo(peer.presence.timestamp)}</span>
-     {/if}
+					<span class="capacity-label" style="color: {capacityColor(peer.presence?.capacity)}">
+						{$t(`presence.${peer.presence?.capacity ?? 'unavailable'}`)}
+					</span>
+					{#if peer.presence?.mood}
+						<span class="separator">·</span>
+						<span>{$t(`presence.${peer.presence.mood}`)}</span>
+					{/if}
+					{#if peer.presence?.timestamp}
+						<span class="separator">·</span>
+						<span>{timeAgo(peer.presence.timestamp)}</span>
+					{/if}
 				</span>
 			</div>
-   <div class="trust-score">
-    <span class="trust-label">{$t('peer.trustScore')}</span>
-    {peer.trustScore.toFixed(1)}
-   </div>
+			<div class="trust-score">
+				<span class="trust-label">{$t('peer.trustScore')}</span>
+				{peer.trustScore.toFixed(1)}
+			</div>
 		</div>
 
 		<!-- Offers -->
@@ -70,9 +105,9 @@
 			<section>
 				<h3 class="section-label">{$t('peer.offering')}</h3>
 				<div class="tag-row">
-     {#each peer.presence.offers as tag}
-      <span class="tag tag-offer">{$tv(tag)}</span>
-     {/each}
+					{#each peer.presence.offers as tag}
+						<span class="tag tag-offer">{$tv(tag)}</span>
+					{/each}
 				</div>
 			</section>
 		{/if}
@@ -82,16 +117,16 @@
 			<section>
 				<h3 class="section-label">{$t('peer.couldUse')}</h3>
 				<div class="tag-row">
-     {#each peer.presence.needs as tag}
-      <span class="tag tag-need">{$tv(tag)}</span>
-     {/each}
+					{#each peer.presence.needs as tag}
+						<span class="tag tag-need">{$tv(tag)}</span>
+					{/each}
 				</div>
 			</section>
 		{/if}
 
 		<!-- No presence -->
 		{#if !peer.presence}
-			<p class="no-presence">No presence signal right now.</p>
+			<p class="no-presence">{$t('peer.noPresence')}</p>
 		{/if}
 
 		<!-- Actions -->
@@ -168,6 +203,27 @@
 	.peer-name {
 		font-size: 0.9375rem;
 		color: var(--mycel-text);
+		background: none;
+		border: none;
+		border-bottom: 1px dashed var(--mycel-border);
+		padding: 0 0 0.125rem;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.peer-name:hover {
+		border-bottom-color: var(--mycel-accent);
+	}
+
+	.name-edit {
+		font-size: 0.9375rem;
+		color: var(--mycel-text);
+		background: var(--mycel-bg);
+		border: 1px solid var(--mycel-accent);
+		border-radius: 0.25rem;
+		padding: 0.125rem 0.375rem;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.peer-meta {
@@ -186,25 +242,25 @@
 		opacity: 0.4;
 	}
 
- .trust-label {
-  font-size: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.6;
- }
+	.trust-score {
+		font-size: 0.75rem;
+		color: var(--mycel-text-dim);
+		background: var(--mycel-bg);
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.375rem;
+		font-variant-numeric: tabular-nums;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.125rem;
+	}
 
- .trust-score {
-  font-size: 0.75rem;
-  color: var(--mycel-text-dim);
-  background: var(--mycel-bg);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.125rem;
- }
+	.trust-label {
+		font-size: 0.5rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.6;
+	}
 
 	section {
 		margin-bottom: 1rem;

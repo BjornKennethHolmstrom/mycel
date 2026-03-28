@@ -20,6 +20,7 @@ export class NostrClient {
 	private pk: string = '';
 	private relays: string[];
 	private subscriptions: Array<{ close: () => void }> = [];
+ private displayName: string = '';
 
 	constructor(relays: string[] = DEFAULT_RELAYS) {
 		this.pool = new SimplePool();
@@ -45,6 +46,15 @@ export class NostrClient {
      return this.pool;
  }
 
+ setDisplayName(name: string) {
+     this.displayName = name;
+     localStorage.setItem('mycel_display_name', name);
+ }
+
+ loadDisplayName() {
+     this.displayName = localStorage.getItem('mycel_display_name') || '';
+ }
+
  async publishPresence(presence: PresenceData): Promise<void> {
      if (!this.sk) throw new Error('No key loaded');
 
@@ -57,6 +67,7 @@ export class NostrClient {
          ],
          content: JSON.stringify({
              mycel_type: 'presence',
+             name: this.displayName,
              capacity: presence.capacity,
              offers: presence.offers,
              needs: presence.needs,
@@ -119,7 +130,7 @@ export class NostrClient {
      await Promise.any(results);
  }
 	/** Subscribe to presence events from a set of pubkeys */
- subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData) => void) {
+ subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData, broadcastName: string) => void) {
      if (pubkeys.length === 0) return null;
 
      const now = Math.floor(Date.now() / 1000);
@@ -157,8 +168,8 @@ export class NostrClient {
                          timestamp: event.created_at
                      };
 
-                     console.log('Presence received from', event.pubkey.slice(0, 8), 'via', relay);
-                     onEvent(event.pubkey, presence);
+                     console.log('Presence received from', event.pubkey.slice(0, 8), 'via', relay);             
+                     onEvent(event.pubkey, presence, data.name || '');
                  } catch {
                      // skip
                  }
