@@ -6,6 +6,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+ import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { hasIdentity, createIdentity, loadIdentity, importSecretKeyHex } from '$lib/nostr/keys';
 	import { currentPubkey } from '$lib/stores/app';
@@ -19,7 +20,7 @@
 			const identity = loadIdentity();
 			if (identity) {
 				currentPubkey.set(identity.pk);
-				goto('/app');
+    goto(`${base}/app`)
 			}
 		}
 	});
@@ -27,14 +28,14 @@
 	function handleCreate() {
 		const { pk } = createIdentity();
 		currentPubkey.set(pk);
-		goto('/app');
+  goto(`${base}/app`)
 	}
 
 	function handleImport() {
 		try {
 			const { pk } = importSecretKeyHex(importKey.trim());
 			currentPubkey.set(pk);
-			goto('/app');
+    goto(`${base}/app`)
 		} catch {
 			error = 'Invalid key. Please check and try again.';
 		}

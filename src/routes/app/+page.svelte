@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+ import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { hasIdentity, loadIdentity } from '$lib/nostr/keys';
 	import { NostrClient } from '$lib/nostr/client';
@@ -17,7 +18,7 @@
 
 	onMount(() => {
 		if (!hasIdentity()) {
-			goto('/');
+			goto('${base}/');
 			return;
 		}
 
