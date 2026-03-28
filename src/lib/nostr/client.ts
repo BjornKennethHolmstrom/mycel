@@ -45,62 +45,79 @@ export class NostrClient {
      return this.pool;
  }
 
-	async publishPresence(presence: PresenceData): Promise<void> {
-		if (!this.sk) throw new Error('No key loaded');
+ async publishPresence(presence: PresenceData): Promise<void> {
+     if (!this.sk) throw new Error('No key loaded');
 
-		const event = finalizeEvent({
-			kind: EVENT_KINDS.PRESENCE,
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [
-				['d', 'presence'],
-				['expiry', String(presence.expiry)]
-			],
-			content: JSON.stringify({
-				mycel_type: 'presence',
-				capacity: presence.capacity,
-				offers: presence.offers,
-				needs: presence.needs,
-				mood: presence.mood,
-				location_hash: presence.locationHash
-			})
-		}, this.sk);
+     const event = finalizeEvent({
+         kind: EVENT_KINDS.PRESENCE,
+         created_at: Math.floor(Date.now() / 1000),
+         tags: [
+             ['d', 'presence'],
+             ['expiry', String(presence.expiry)]
+         ],
+         content: JSON.stringify({
+             mycel_type: 'presence',
+             capacity: presence.capacity,
+             offers: presence.offers,
+             needs: presence.needs,
+             mood: presence.mood,
+             location_hash: presence.locationHash
+         })
+     }, this.sk);
 
-		await Promise.any(this.pool.publish(this.relays, event));
-	}
+     const results = this.pool.publish(this.relays, event);
+     for (let i = 0; i < this.relays.length; i++) {
+         results[i]
+             .then(() => console.log('✓ Published presence to', this.relays[i]))
+             .catch((err: unknown) => console.log('✗ Presence failed on', this.relays[i], err));
+     }
+     await Promise.any(results);
+ }
 
-	async publishGratitude(toPubkey: string, note: string): Promise<void> {
-		if (!this.sk) throw new Error('No key loaded');
+ async publishGratitude(toPubkey: string, note: string): Promise<void> {
+     if (!this.sk) throw new Error('No key loaded');
 
-		const event = finalizeEvent({
-			kind: EVENT_KINDS.GRATITUDE,
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [['p', toPubkey]],
-			content: JSON.stringify({
-				mycel_type: 'gratitude',
-				to: toPubkey,
-				note
-			})
-		}, this.sk);
+     const event = finalizeEvent({
+         kind: EVENT_KINDS.GRATITUDE,
+         created_at: Math.floor(Date.now() / 1000),
+         tags: [['p', toPubkey]],
+         content: JSON.stringify({
+             mycel_type: 'gratitude',
+             to: toPubkey,
+             note
+         })
+     }, this.sk);
 
-		await Promise.any(this.pool.publish(this.relays, event));
-	}
+     const results = this.pool.publish(this.relays, event);
+     for (let i = 0; i < this.relays.length; i++) {
+         results[i]
+             .then(() => console.log('✓ Published gratitude to', this.relays[i]))
+             .catch((err: unknown) => console.log('✗ Gratitude failed on', this.relays[i], err));
+     }
+     await Promise.any(results);
+ }
 
-	async publishVouch(forPubkey: string): Promise<void> {
-		if (!this.sk) throw new Error('No key loaded');
+ async publishVouch(forPubkey: string): Promise<void> {
+     if (!this.sk) throw new Error('No key loaded');
 
-		const event = finalizeEvent({
-			kind: EVENT_KINDS.VOUCH,
-			created_at: Math.floor(Date.now() / 1000),
-			tags: [['p', forPubkey]],
-			content: JSON.stringify({
-				mycel_type: 'vouch',
-				for: forPubkey
-			})
-		}, this.sk);
+     const event = finalizeEvent({
+         kind: EVENT_KINDS.VOUCH,
+         created_at: Math.floor(Date.now() / 1000),
+         tags: [['p', forPubkey]],
+         content: JSON.stringify({
+             mycel_type: 'vouch',
+             for: forPubkey
+         })
+     }, this.sk);
 
-		await Promise.any(this.pool.publish(this.relays, event));
-	}
-
+     const results = this.pool.publish(this.relays, event);
+     for (let i = 0; i < this.relays.length; i++) {
+         results[i]
+             .then(() => console.log('✓ Published vouch to', this.relays[i]))
+             .catch((err: unknown) => console.log('✗ Vouch failed on', this.relays[i], err));
+     }
+     await Promise.any(results);
+ }
 	/** Subscribe to presence events from a set of pubkeys */
 	subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData) => void) {
 		if (pubkeys.length === 0) return null;
