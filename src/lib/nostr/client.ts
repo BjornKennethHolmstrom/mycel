@@ -9,8 +9,9 @@ import { EVENT_KINDS, type PresenceData } from '$lib/types';
 
 const DEFAULT_RELAYS = [
 	'wss://nos.lol',
-	'wss://relay.nostr.band',
-	'wss://relay.snort.social'
+	'wss://relay.snort.social',
+	'wss://relay.primal.net',
+	'wss://nostr.mom'
 ];
 
 export class NostrClient {
