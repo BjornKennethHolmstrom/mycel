@@ -146,8 +146,11 @@
  }
 
  function handleRenamePeer(pubkey: string, name: string) {
-  updatePeer(pubkey, { name });
-  persistPeers();
+     updatePeer(pubkey, { name });
+     if (selectedPeer && selectedPeer.pubkey === pubkey) {
+         selectedPeer = { ...selectedPeer, name };
+     }
+     persistPeers();
  }
 
  function startSubscriptions() {
