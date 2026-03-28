@@ -1,12 +1,22 @@
 <!--
 	Mycel Ambient Map
 	The primary UI. A living visualization of the user's trust network.
+	"You" sit at the center. Edges radiate outward to peers.
+	Tap a peer node to see their details.
 	Renders on Canvas for performance.
 -->
 <script lang="ts">
+ import { t, tv } from '$lib/i18n';
 	import { onMount, onDestroy } from 'svelte';
 	import { peerList } from '$lib/stores/app';
 	import type { Peer } from '$lib/types';
+
+ interface Props {
+  onpeerselect?: (peer: Peer) => void;
+  onselfselect?: () => void;
+ }
+
+ let { onpeerselect, onselfselect }: Props = $props();
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
@@ -14,7 +24,6 @@
 	let width = 0;
 	let height = 0;
 
-	/** Node positions, computed from trust scores */
 	interface NodePosition {
 		peer: Peer;
 		x: number;
@@ -30,13 +39,13 @@
 		available: '#5a9e6a',
 		limited: '#8a8e4a',
 		unavailable: '#4a4a4a',
-		edge: 'rgba(106, 173, 122, 0.15)',
-		edgeStrong: 'rgba(106, 173, 122, 0.4)',
 		text: '#c8d6c0',
 		textDim: '#6b7f60',
 		offer: '#6aad7a',
 		need: '#c47a3a',
-		bg: '#0a0f0a'
+		you: '#6aad7a',
+		youGlow: 'rgba(106, 173, 122, 0.12)',
+		youRing: 'rgba(106, 173, 122, 0.4)'
 	};
 
 	function capacityColor(capacity: string | undefined): string {
@@ -45,25 +54,19 @@
 		return COLORS.unavailable;
 	}
 
-	/** Compute node positions in a radial layout centered on screen */
 	function layoutNodes(peers: Peer[]) {
 		const cx = width / 2;
 		const cy = height / 2;
 		const maxRadius = Math.min(width, height) * 0.38;
+		const maxScore = Math.max(...peers.map(p => p.trustScore), 1);
 
 		nodes = peers.map((peer, i) => {
-			// Higher trust = closer to center
-			const maxScore = Math.max(...peers.map(p => p.trustScore), 1);
 			const normalizedScore = peer.trustScore / maxScore;
-			const distance = maxRadius * (1 - normalizedScore * 0.7);
-
-			// Spread evenly around the circle
+			const distance = maxRadius * (1 - normalizedScore * 0.5);
 			const angle = (i / Math.max(peers.length, 1)) * Math.PI * 2 - Math.PI / 2;
 
 			const targetX = cx + Math.cos(angle) * distance;
 			const targetY = cy + Math.sin(angle) * distance;
-
-			// Node size based on trust score (min 6, max 24)
 			const radius = 6 + normalizedScore * 18;
 
 			const existing = nodes.find(n => n.peer.pubkey === peer.pubkey);
@@ -79,40 +82,79 @@
 		});
 	}
 
-	/** Smooth animation toward target positions */
-	function animate() {
-		if (!ctx) return;
+	function handleCanvasClick(event: MouseEvent | TouchEvent) {
+		if (!onpeerselect) return;
 
-		ctx.clearRect(0, 0, width, height);
+		const rect = canvas.getBoundingClientRect();
+		let clientX: number, clientY: number;
 
-		// Draw edges between nodes
-		for (let i = 0; i < nodes.length; i++) {
-			for (let j = i + 1; j < nodes.length; j++) {
-				const a = nodes[i];
-				const b = nodes[j];
-				// Edge opacity based on combined trust scores
-				const strength = Math.min((a.peer.trustScore + b.peer.trustScore) / 20, 1);
-				if (strength < 0.1) continue;
-
-				ctx.beginPath();
-				ctx.moveTo(a.x, a.y);
-				ctx.lineTo(b.x, b.y);
-				ctx.strokeStyle = strength > 0.5 ? COLORS.edgeStrong : COLORS.edge;
-				ctx.lineWidth = strength * 2;
-				ctx.stroke();
-			}
+		if ('touches' in event) {
+			if (event.touches.length === 0) return;
+			clientX = event.touches[0].clientX;
+			clientY = event.touches[0].clientY;
+		} else {
+			clientX = event.clientX;
+			clientY = event.clientY;
 		}
 
-		// Draw nodes
+		const x = clientX - rect.left;
+		const y = clientY - rect.top;
+
+  // Check if "you" node was tapped
+  const cx = width / 2;
+  const cy = height / 2;
+  const dx = x - cx;
+  const dy = y - cy;
+  if (dx * dx + dy * dy <= 26 * 26) { // youRadius + padding
+      onselfselect?.();
+      return;
+  }
+
+		// Check hit on nodes (reverse order so top-drawn nodes get priority)
+		for (let i = nodes.length - 1; i >= 0; i--) {
+			const node = nodes[i];
+			const dx = x - node.x;
+			const dy = y - node.y;
+			// Generous tap target: node radius + 8px padding
+			const hitRadius = node.radius + 8;
+			if (dx * dx + dy * dy <= hitRadius * hitRadius) {
+				onpeerselect(node.peer);
+				return;
+			}
+		}
+	}
+
+	function animate() {
+		if (!ctx) return;
+		ctx.clearRect(0, 0, width, height);
+
+		const cx = width / 2;
+		const cy = height / 2;
+		const maxScore = Math.max(...nodes.map(n => n.peer.trustScore), 1);
+
+		// Draw edges from center (you) to each peer
 		for (const node of nodes) {
-			// Ease toward target
+			const strength = node.peer.trustScore / maxScore;
+			if (strength < 0.05) continue;
+
 			node.x += (node.targetX - node.x) * 0.08;
 			node.y += (node.targetY - node.y) * 0.08;
 
+			const alpha = 0.08 + strength * 0.3;
+			ctx.beginPath();
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(node.x, node.y);
+			ctx.strokeStyle = `rgba(106, 173, 122, ${alpha})`;
+			ctx.lineWidth = 0.5 + strength * 2.5;
+			ctx.stroke();
+		}
+
+		// Draw peer nodes
+		for (const node of nodes) {
 			const presence = node.peer.presence;
 			const color = capacityColor(presence?.capacity);
 
-			// Outer glow for available nodes
+			// Glow for available nodes
 			if (presence?.capacity === 'available') {
 				ctx.beginPath();
 				ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
@@ -120,19 +162,21 @@
 				ctx.fill();
 			}
 
-			// Main node circle
+			// Node circle
 			ctx.beginPath();
 			ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
 			ctx.fillStyle = color;
 			ctx.fill();
 
-			// Offer/need indicators
+			// Offer indicator (top right)
 			if (presence?.offers && presence.offers.length > 0) {
 				ctx.beginPath();
 				ctx.arc(node.x + node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
 				ctx.fillStyle = COLORS.offer;
 				ctx.fill();
 			}
+
+			// Need indicator (top left)
 			if (presence?.needs && presence.needs.length > 0) {
 				ctx.beginPath();
 				ctx.arc(node.x - node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
@@ -148,11 +192,29 @@
 			ctx.fillText(name, node.x, node.y + node.radius + 14);
 		}
 
-		// Center label
-		ctx.font = '11px system-ui';
+		// Draw "you" node at center
+		const youRadius = 14;
+
+		ctx.beginPath();
+		ctx.arc(cx, cy, youRadius + 12, 0, Math.PI * 2);
+		ctx.fillStyle = COLORS.youGlow;
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.arc(cx, cy, youRadius + 2, 0, Math.PI * 2);
+		ctx.strokeStyle = COLORS.youRing;
+		ctx.lineWidth = 1;
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.arc(cx, cy, youRadius, 0, Math.PI * 2);
+		ctx.fillStyle = COLORS.you;
+		ctx.fill();
+
+		ctx.font = '10px system-ui';
 		ctx.fillStyle = COLORS.textDim;
 		ctx.textAlign = 'center';
-		ctx.fillText('you', width / 2, height / 2 + 4);
+		ctx.fillText($t('map.you'), cx, cy + youRadius + 14);
 
 		animationFrame = requestAnimationFrame(animate);
 	}
@@ -179,14 +241,18 @@
 		window.removeEventListener('resize', handleResize);
 	});
 
-	// React to peer changes
-	$: if ($peerList) {
-		layoutNodes($peerList);
-	}
+ $effect(() => {
+     if ($peerList) {
+         layoutNodes($peerList);
+     }
+ });
 </script>
 
 <div class="ambient-map">
-	<canvas bind:this={canvas}></canvas>
+	<canvas
+		bind:this={canvas}
+		onclick={handleCanvasClick}
+	></canvas>
 </div>
 
 <style>
@@ -198,5 +264,6 @@
 	}
 	canvas {
 		display: block;
+		cursor: pointer;
 	}
 </style>

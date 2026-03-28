@@ -6,6 +6,7 @@
 
 import { writable, derived } from 'svelte/store';
 import type { Peer, PresenceData } from '$lib/types';
+import { savePeers } from '$lib/stores/peers';
 
 /** Current user's public key */
 export const currentPubkey = writable<string>('');
@@ -16,6 +17,13 @@ export const isAuthenticated = derived(currentPubkey, ($pk) => $pk.length > 0);
 /** All known peers, keyed by pubkey */
 export const peers = writable<Map<string, Peer>>(new Map());
 
+// Auto-save whenever peers change
+peers.subscribe(($peers) => {
+	if ($peers.size > 0) {
+		savePeers($peers);
+	}
+});
+
 /** Update or add a peer */
 export function updatePeer(pubkey: string, data: Partial<Peer>) {
 	peers.update((map) => {
@@ -25,7 +33,7 @@ export function updatePeer(pubkey: string, data: Partial<Peer>) {
 			lastSeen: Date.now()
 		};
 		map.set(pubkey, { ...existing, ...data });
-		return new Map(map); // new reference for reactivity
+		return new Map(map);
 	});
 }
 

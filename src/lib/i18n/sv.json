@@ -1,0 +1,81 @@
+{
+	"app": {
+		"name": "mycel",
+		"tagline": "koordineringssubstrat för levande samhällen",
+		"connecting": "ansluter…",
+		"connected": "ansluten"
+	},
+ "map": {
+  "you": "du"
+ },
+	"onboarding": {
+		"create": "Skapa ny identitet",
+		"haveKey": "Jag har en nyckel",
+		"pasteKey": "Klistra in din hemliga nyckel (hex)",
+		"loadKey": "Ladda nyckel",
+		"invalidKey": "Ogiltig nyckel. Kontrollera och försök igen.",
+		"keyLocal": "Din nyckel skapas lokalt och lämnar aldrig din enhet."
+	},
+	"presence": {
+		"setPresence": "Ange din närvaro",
+		"updatePresence": "Uppdatera närvaro",
+		"capacity": "Kapacitet",
+		"mood": "Stämning",
+		"offers": "Jag kan erbjuda",
+		"needs": "Jag skulle behöva",
+		"offering": "erbjuder",
+		"available": "tillgänglig",
+		"limited": "begränsad",
+		"unavailable": "ej tillgänglig",
+		"calm": "lugn",
+		"stretched": "ansträngd",
+		"urgent": "akut"
+	},
+ "addPeer": {
+  "yourKey": "Din nyckel",
+  "copy": "kopiera",
+  "copied": "kopierad!",
+  "shareHint": "Dela denna med någon så de kan lägga till dig.",
+  "addSomeone": "Lägg till kontakt",
+  "namePlaceholder": "Namn (valfritt)",
+  "keyPlaceholder": "Deras publika nyckel (hex)",
+  "add": "Lägg till",
+  "errorEmpty": "Klistra in en publik nyckel.",
+  "errorInvalid": "Inte en giltig 64-teckens hexnyckel.",
+  "errorNpub": "npub-format stöds inte ännu — klistra in hexnyckeln.",
+  "peerAdded": "{name} tillagd"
+ },
+	"peer": {
+		"noPresence": "Ingen närvarosignal just nu.",
+		"sendGratitude": "Skicka tacksamhet",
+		"gratitudeSent": "tacksamhet skickad till {name}",
+  "gratitudeReceived": "tacksamhet mottagen från {name}",
+		"trustScore": "Tillitspoäng",
+		"offering": "Erbjuder",
+		"couldUse": "Skulle behöva",
+  "justNow": "just nu",
+  "minutesAgo": "{n}m sedan",
+  "hoursAgo": "{n}h sedan",
+  "daysAgo": "{n}d sedan"
+	},
+	"vocab": {
+		"tools": "verktyg",
+		"food": "mat",
+		"transport": "transport",
+		"shelter": "husrum",
+		"skills": "färdigheter",
+		"labor": "arbetskraft",
+		"childcare": "barnpassning",
+		"medical": "sjukvård",
+		"firewood": "ved",
+		"water": "vatten",
+		"electronics": "elektronik",
+		"clothing": "kläder",
+		"seeds": "frön",
+		"storage": "förvaring",
+		"company": "sällskap",
+		"conversation": "samtal",
+		"meal-together": "äta tillsammans",
+		"walk-together": "promenera tillsammans"
+	}
+}

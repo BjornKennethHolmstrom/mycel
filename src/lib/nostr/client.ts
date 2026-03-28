@@ -18,20 +18,19 @@ export class NostrClient {
 	private sk: Uint8Array | null = null;
 	private pk: string = '';
 	private relays: string[];
+	private subscriptions: Array<{ close: () => void }> = [];
 
 	constructor(relays: string[] = DEFAULT_RELAYS) {
 		this.pool = new SimplePool();
 		this.relays = relays;
 	}
 
-	/** Generate a new keypair */
 	generateKeys(): { sk: Uint8Array; pk: string } {
 		this.sk = generateSecretKey();
 		this.pk = getPublicKey(this.sk);
 		return { sk: this.sk, pk: this.pk };
 	}
 
-	/** Load existing secret key */
 	loadKey(sk: Uint8Array) {
 		this.sk = sk;
 		this.pk = getPublicKey(sk);
@@ -41,7 +40,6 @@ export class NostrClient {
 		return this.pk;
 	}
 
-	/** Publish a presence event */
 	async publishPresence(presence: PresenceData): Promise<void> {
 		if (!this.sk) throw new Error('No key loaded');
 
@@ -65,7 +63,6 @@ export class NostrClient {
 		await Promise.any(this.pool.publish(this.relays, event));
 	}
 
-	/** Publish a gratitude event */
 	async publishGratitude(toPubkey: string, note: string): Promise<void> {
 		if (!this.sk) throw new Error('No key loaded');
 
@@ -83,7 +80,6 @@ export class NostrClient {
 		await Promise.any(this.pool.publish(this.relays, event));
 	}
 
-	/** Publish a vouch event */
 	async publishVouch(forPubkey: string): Promise<void> {
 		if (!this.sk) throw new Error('No key loaded');
 
@@ -102,14 +98,16 @@ export class NostrClient {
 
 	/** Subscribe to presence events from a set of pubkeys */
 	subscribePresence(pubkeys: string[], onEvent: (pubkey: string, presence: PresenceData) => void) {
+		if (pubkeys.length === 0) return null;
+
 		const now = Math.floor(Date.now() / 1000);
 
-		return this.pool.subscribeMany(
+		const sub = this.pool.subscribeMany(
 			this.relays,
 			[{
 				kinds: [EVENT_KINDS.PRESENCE],
 				authors: pubkeys,
-				since: now - 7200 // last 2 hours
+				since: now - 7200
 			}],
 			{
 				onevent(event) {
@@ -134,11 +132,14 @@ export class NostrClient {
 				}
 			}
 		);
+
+		this.subscriptions.push(sub);
+		return sub;
 	}
 
-	/** Subscribe to gratitude events for a pubkey */
+	/** Subscribe to gratitude events directed at a pubkey */
 	subscribeGratitude(pubkey: string, onEvent: (from: string, note: string) => void) {
-		return this.pool.subscribeMany(
+		const sub = this.pool.subscribeMany(
 			this.relays,
 			[{
 				kinds: [EVENT_KINDS.GRATITUDE],
@@ -156,11 +157,14 @@ export class NostrClient {
 				}
 			}
 		);
+
+		this.subscriptions.push(sub);
+		return sub;
 	}
 
-	/** Subscribe to vouch events for a pubkey */
+	/** Subscribe to vouch events directed at a pubkey */
 	subscribeVouches(pubkey: string, onEvent: (from: string) => void) {
-		return this.pool.subscribeMany(
+		const sub = this.pool.subscribeMany(
 			this.relays,
 			[{
 				kinds: [EVENT_KINDS.VOUCH],
@@ -178,9 +182,19 @@ export class NostrClient {
 				}
 			}
 		);
+
+		this.subscriptions.push(sub);
+		return sub;
 	}
 
-	/** Fetch profile metadata (kind 0) for a pubkey */
+	/** Close all active subscriptions */
+	closeSubscriptions() {
+		for (const sub of this.subscriptions) {
+			sub.close();
+		}
+		this.subscriptions = [];
+	}
+
 	async fetchProfile(pubkey: string): Promise<{ name?: string; nip05?: string } | null> {
 		const event = await this.pool.get(this.relays, {
 			kinds: [0],
@@ -198,6 +212,7 @@ export class NostrClient {
 	}
 
 	destroy() {
+		this.closeSubscriptions();
 		this.pool.close(this.relays);
 	}
 }

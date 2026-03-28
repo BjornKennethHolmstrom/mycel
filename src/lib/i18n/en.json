@@ -1,0 +1,81 @@
+{
+	"app": {
+		"name": "mycel",
+		"tagline": "coordination substrate for living communities",
+		"connecting": "connecting…",
+		"connected": "connected"
+	},
+ "map": {
+  "you": "you"
+ },
+	"onboarding": {
+		"create": "Create new identity",
+		"haveKey": "I have a key",
+		"pasteKey": "Paste your secret key (hex)",
+		"loadKey": "Load key",
+		"invalidKey": "Invalid key. Please check and try again.",
+		"keyLocal": "Your key is generated locally and never leaves your device."
+	},
+	"presence": {
+		"setPresence": "Set your presence",
+		"updatePresence": "Update presence",
+		"capacity": "Capacity",
+		"mood": "Mood",
+		"offers": "I can offer",
+		"needs": "I could use",
+		"offering": "offering",
+		"available": "available",
+		"limited": "limited",
+		"unavailable": "unavailable",
+		"calm": "calm",
+		"stretched": "stretched",
+		"urgent": "urgent"
+	},
+ "addPeer": {
+  "yourKey": "Your key",
+  "copy": "copy",
+  "copied": "copied!",
+  "shareHint": "Share this with someone so they can add you.",
+  "addSomeone": "Add a peer",
+  "namePlaceholder": "Name (optional)",
+  "keyPlaceholder": "Their public key (hex)",
+  "add": "Add peer",
+  "errorEmpty": "Please paste a public key.",
+  "errorInvalid": "Not a valid 64-character hex key.",
+  "errorNpub": "npub format not yet supported — please paste the hex key.",
+  "peerAdded": "{name} added"
+ },
+	"peer": {
+		"noPresence": "No presence signal right now.",
+		"sendGratitude": "Send gratitude",
+		"gratitudeSent": "gratitude sent to {name}",
+  "gratitudeReceived": "gratitude received from {name}",
+		"trustScore": "Trust score",
+		"offering": "Offering",
+		"couldUse": "Could use",
+  "justNow": "just now",
+  "minutesAgo": "{n}m ago",
+  "hoursAgo": "{n}h ago",
+  "daysAgo": "{n}d ago"
+	},
+	"vocab": {
+		"tools": "tools",
+		"food": "food",
+		"transport": "transport",
+		"shelter": "shelter",
+		"skills": "skills",
+		"labor": "labor",
+		"childcare": "childcare",
+		"medical": "medical",
+		"firewood": "firewood",
+		"water": "water",
+		"electronics": "electronics",
+		"clothing": "clothing",
+		"seeds": "seeds",
+		"storage": "storage",
+		"company": "company",
+		"conversation": "conversation",
+		"meal-together": "meal together",
+		"walk-together": "walk together"
+	}
+}

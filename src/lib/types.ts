@@ -72,5 +72,6 @@ export const EVENT_KINDS = {
 export const VOCABULARY = [
 	'tools', 'food', 'transport', 'shelter', 'skills', 'labor',
 	'childcare', 'medical', 'firewood', 'water', 'electronics',
-	'clothing', 'seeds', 'storage'
+	'clothing', 'seeds', 'storage',
+	'company', 'conversation', 'meal-together', 'walk-together'
 ] as const;
