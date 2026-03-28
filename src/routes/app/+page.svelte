@@ -11,7 +11,7 @@
 	import { hasIdentity, loadIdentity } from '$lib/nostr/keys';
 	import { NostrClient } from '$lib/nostr/client';
 	import { trustStore } from '$lib/trust/store';
-import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus } from '$lib/stores/app'; import { loadPeers } from '$lib/stores/peers';
+import { currentPubkey, peers, updatePeer, updatePresence, connectionStatus, persistPeers } from '$lib/stores/app';
 	import type { Peer, PresenceData } from '$lib/types';
  import LangSwitcher from '$lib/components/ui/LangSwitcher.svelte';
  import AddPeerPanel from '$lib/components/presence/AddPeerPanel.svelte';
