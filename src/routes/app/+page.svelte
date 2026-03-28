@@ -155,6 +155,20 @@
          persistPeers();
      });
 
+     // Debug: also subscribe to ALL events from these pubkeys to see if anything comes through
+     client.pool_debug.subscribeMany(
+         ['wss://nos.lol', 'wss://relay.snort.social'],
+         [{ authors: peerPubkeys, limit: 5 }],
+         {
+             onevent(event) {
+                 log('Raw event from peer: kind=' + event.kind + ' pubkey=' + event.pubkey.slice(0, 8));
+             },
+             oneose() {
+                 log('End of stored events from relays');
+             }
+         }
+     );
+
      // Subscribe to gratitude directed at us
      let myPk = '';
      currentPubkey.subscribe((v) => { myPk = v; })();

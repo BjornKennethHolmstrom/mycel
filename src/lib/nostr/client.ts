@@ -40,6 +40,10 @@ export class NostrClient {
 		return this.pk;
 	}
 
+ get pool_debug(): SimplePool {
+     return this.pool;
+ }
+
 	async publishPresence(presence: PresenceData): Promise<void> {
 		if (!this.sk) throw new Error('No key loaded');
 
