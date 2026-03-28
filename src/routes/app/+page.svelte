@@ -179,6 +179,26 @@
          const peer = getPeer(from);
          toastMessage = $t('peer.gratitudeSent', { name: peer?.name || from.slice(0, 8) });
      });
+
+     // Debug: direct websocket subscription bypassing SimplePool
+     const debugWs = new WebSocket('wss://relay.snort.social');
+     debugWs.onopen = () => {
+         const now = Math.floor(Date.now() / 1000);
+         debugWs.send(JSON.stringify(["REQ", "debug-direct", {
+             kinds: [30078],
+             authors: peerPubkeys,
+             since: now - 7200
+         }]));
+         log('Debug: sent direct subscription to relay.snort.social');
+     };
+     debugWs.onmessage = (e) => {
+         const data = JSON.parse(e.data);
+         if (data[0] === 'EVENT') {
+             log('Debug: DIRECT got event from ' + data[2].pubkey.slice(0, 8));
+         } else {
+             log('Debug: DIRECT ' + JSON.stringify(data));
+         }
+     };
  }
 
 	/** Demo data for development — remove when real peers exist */
