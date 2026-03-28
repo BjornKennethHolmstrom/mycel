@@ -123,22 +123,27 @@ export class NostrClient {
      if (pubkeys.length === 0) return null;
 
      const now = Math.floor(Date.now() / 1000);
+     const filter = JSON.stringify(["REQ", "mycel-presence", {
+         kinds: [EVENT_KINDS.PRESENCE],
+         authors: pubkeys,
+         since: now - 7200
+     }]);
 
-     console.log('Subscribing to presence on relays:', this.relays);
-     console.log('For authors:', pubkeys);
-     console.log('Since:', now - 7200, '(now:', now, ')');
+     for (const relay of this.relays) {
+         try {
+             const ws = new WebSocket(relay);
 
-     const sub = this.pool.subscribeMany(
-         this.relays,
-         [{
-             kinds: [EVENT_KINDS.PRESENCE],
-             authors: pubkeys,
-             since: now - 7200
-         }],
-         {
-             onevent(event) {
-                 console.log('>>> Presence event received:', event.pubkey.slice(0, 8), event.content.slice(0, 60));
+             ws.onopen = () => {
+                 console.log('Subscription connected to', relay);
+                 ws.send(filter);
+             };
+
+             ws.onmessage = (e) => {
                  try {
+                     const msg = JSON.parse(e.data);
+                     if (msg[0] !== 'EVENT') return;
+
+                     const event = msg[2];
                      const data = JSON.parse(event.content);
                      if (data.mycel_type !== 'presence') return;
 
@@ -148,23 +153,26 @@ export class NostrClient {
                          needs: data.needs || [],
                          mood: data.mood,
                          locationHash: data.location_hash,
-                         expiry: Number(event.tags.find(t => t[0] === 'expiry')?.[1] || 3600),
+                         expiry: Number(event.tags.find((t: string[]) => t[0] === 'expiry')?.[1] || 3600),
                          timestamp: event.created_at
                      };
 
+                     console.log('Presence received from', event.pubkey.slice(0, 8), 'via', relay);
                      onEvent(event.pubkey, presence);
-                 } catch (err) {
-                     console.log('Failed to parse presence:', err);
+                 } catch {
+                     // skip
                  }
-             },
-             oneose() {
-                 console.log('Subscription EOSE (end of stored events)');
-             }
-         }
-     );
+             };
 
-     this.subscriptions.push(sub);
-     return sub;
+             ws.onerror = () => console.log('Subscription failed on', relay);
+
+             this.subscriptions.push({ close: () => ws.close() });
+         } catch {
+             console.log('Could not connect to', relay);
+         }
+     }
+
+     return this.subscriptions[this.subscriptions.length - 1];
  }
 
 	/** Subscribe to gratitude events directed at a pubkey */
