@@ -9,14 +9,15 @@
 	import { t, tv } from '$lib/i18n';
 	import type { Peer } from '$lib/types';
 
-	interface Props {
-		peer: Peer | null;
-		onclose: () => void;
-		ongratitude: (pubkey: string) => void;
-		onrename: (pubkey: string, name: string) => void;
-	}
+interface Props {
+ peer: Peer | null;
+ onclose: () => void;
+ ongratitude: (pubkey: string) => void;
+ onrename: (pubkey: string, name: string) => void;
+ onforget: (pubkey: string) => void;
+}
 
-	let { peer, onclose, ongratitude, onrename }: Props = $props();
+let { peer, onclose, ongratitude, onrename, onforget }: Props = $props();
 
 	let editing = $state(false);
 	let editName = $state('');
@@ -134,6 +135,9 @@ function finishEditing() {
 			<button class="action-btn gratitude-btn" onclick={() => ongratitude(peer!.pubkey)}>
 				{$t('peer.sendGratitude')}
 			</button>
+   <button class="action-btn forget-btn" onclick={() => onforget(peer!.pubkey)}>
+    {$t('peer.forget')}
+   </button>
 		</div>
 	</div>
 {/if}
@@ -329,4 +333,15 @@ function finishEditing() {
 	.gratitude-btn:hover {
 		background: rgba(74, 124, 89, 0.1);
 	}
+
+ .forget-btn {
+  border: 1px solid var(--mycel-border);
+  background: transparent;
+  color: var(--mycel-text-dim);
+ }
+
+ .forget-btn:hover {
+  border-color: var(--mycel-urgent);
+  color: var(--mycel-urgent);
+ }
 </style>

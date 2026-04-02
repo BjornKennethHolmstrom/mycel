@@ -53,6 +53,8 @@
 		"sendGratitude": "Send gratitude",
 		"gratitudeSent": "gratitude sent to {name}",
   "gratitudeReceived": "gratitude received from {name}",
+  "forget": "Forget",
+  "forgotten": "Contact forgotten",
 		"trustScore": "Trust score",
 		"offering": "Offering",
 		"couldUse": "Could use",

@@ -82,6 +82,11 @@ class TrustStore {
 		}
 	}
 
+ forget(peerPubkey: string) {
+     this.events.delete(peerPubkey);
+     this.save();
+ }
+
 	clear() {
 		this.events.clear();
 		localStorage.removeItem(STORAGE_KEY);

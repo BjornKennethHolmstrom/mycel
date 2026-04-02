@@ -53,6 +53,8 @@
 		"sendGratitude": "Skicka tacksamhet",
 		"gratitudeSent": "tacksamhet skickad till {name}",
   "gratitudeReceived": "tacksamhet mottagen från {name}",
+  "forget": "Glöm",
+  "forgotten": "Kontakt bortglömd",
 		"trustScore": "Tillitspoäng",
 		"offering": "Erbjuder",
 		"couldUse": "Skulle behöva",

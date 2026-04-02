@@ -153,6 +153,19 @@
      persistPeers();
  }
 
+ function handleForgetPeer(pubkey: string) {
+     // Remove from peers store
+     peers.update((map) => {
+         map.delete(pubkey);
+         return new Map(map);
+     });
+     // Remove trust history
+     trustStore.forget(pubkey);
+     selectedPeer = null;
+     persistPeers();
+     toastMessage = $t('peer.forgotten');
+ }
+
  function startSubscriptions() {
      if (!client) return;
 
@@ -323,6 +336,7 @@
  onclose={() => selectedPeer = null}
  ongratitude={handleSendGratitude}
  onrename={handleRenamePeer}
+ onforget={handleForgetPeer}
 />
 
 {#if toastMessage}
