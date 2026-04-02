@@ -319,7 +319,7 @@
 					myPresence.capacity === 'limited' ? 'var(--mycel-node-limited)' :
 					'var(--mycel-node-unavailable)'
 				}"></span>
-				<span>{myPresence.capacity}</span>
+				<span>{$t(`presence.${myPresence.capacity}`)}</span>
 				{#if myPresence.offers.length > 0}
 					<span class="presence-detail">· {myPresence.offers.length} {$t('presence.offering')}</span>
 				{/if}
