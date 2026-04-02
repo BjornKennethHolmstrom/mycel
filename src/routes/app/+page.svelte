@@ -116,7 +116,7 @@
      if (client) {
          try {
              await client.publishPresence(presence);
-             log('Presence published successfully');
+             console.log('Presence published successfully');
          } catch (err) {
              console.error('Failed to publish presence:', err);
          }
@@ -185,7 +185,7 @@
 
      if (peerPubkeys.length === 0) return;
 
-     log('Starting subscriptions for pubkeys: ' + peerPubkeys.join(', '));
+     console.log('Starting subscriptions for pubkeys: ' + peerPubkeys.join(', '));
 
      // Subscribe to presence from all known real peers
      client.subscribePresence(peerPubkeys, (pubkey, presence, broadcastName) => {
@@ -207,10 +207,10 @@
          [{ authors: peerPubkeys, limit: 5 }],
          {
              onevent(event) {
-                 log('Raw event from peer: kind=' + event.kind + ' pubkey=' + event.pubkey.slice(0, 8));
+                 console.log('Raw event from peer: kind=' + event.kind + ' pubkey=' + event.pubkey.slice(0, 8));
              },
              oneose() {
-                 log('End of stored events from relays');
+                 console.log('End of stored events from relays');
              }
          }
      );
@@ -235,14 +235,14 @@
              authors: peerPubkeys,
              since: now - 7200
          }]));
-         log('Debug: sent direct subscription to relay.snort.social');
+         console.log('Debug: sent direct subscription to relay.snort.social');
      };
      debugWs.onmessage = (e) => {
          const data = JSON.parse(e.data);
          if (data[0] === 'EVENT') {
-             log('Debug: DIRECT got event from ' + data[2].pubkey.slice(0, 8));
+             console.log('Debug: DIRECT got event from ' + data[2].pubkey.slice(0, 8));
          } else {
-             log('Debug: DIRECT ' + JSON.stringify(data));
+             console.log('Debug: DIRECT ' + JSON.stringify(data));
          }
      };
  }
