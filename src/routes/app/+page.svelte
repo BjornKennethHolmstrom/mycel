@@ -29,6 +29,7 @@
 	let selectedPeer = $state<Peer | null>(null);
  let toastMessage = $state('');
  let myDisplayName = $state(localStorage.getItem('mycel_display_name') || '');
+ let republishTimer: ReturnType<typeof setInterval> | null = null;
 
  onMount(() => {
      if (!hasIdentity()) {
@@ -67,12 +68,21 @@
      startSubscriptions();
      connectionStatus.set('connected');
      statusText = 'connected';
+     // Auto-republish presence every 30 minutes
+     republishTimer = setInterval(() => {
+         if (myPresence && client) {
+             client.publishPresence(myPresence).catch(err => {
+                 console.error('Auto-republish failed:', err);
+             });
+         }
+     }, 30 * 60 * 1000);
      persistPeers();
  });
 
-	onDestroy(() => {
-		client?.destroy();
-	});
+ onDestroy(() => {
+     if (republishTimer) clearInterval(republishTimer);
+     client?.destroy();
+ });
 
  function saveMyPresence(presence: PresenceData) {
      localStorage.setItem('mycel_my_presence', JSON.stringify(presence));
