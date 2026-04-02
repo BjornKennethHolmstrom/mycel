@@ -131,14 +131,14 @@ function finishEditing() {
 		{/if}
 
 		<!-- Actions -->
-		<div class="actions">
-			<button class="action-btn gratitude-btn" onclick={() => ongratitude(peer!.pubkey)}>
-				{$t('peer.sendGratitude')}
-			</button>
+  <div class="actions">
+   <button class="action-btn gratitude-btn" onclick={() => ongratitude(peer!.pubkey)}>
+    {$t('peer.sendGratitude')}
+   </button>
    <button class="action-btn forget-btn" onclick={() => onforget(peer!.pubkey)}>
     {$t('peer.forget')}
    </button>
-		</div>
+  </div>
 	</div>
 {/if}
 
