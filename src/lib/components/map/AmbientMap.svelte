@@ -85,6 +85,21 @@
 		});
 	}
 
+ /** Returns 1.0 for fresh presence, fading to 0.15 for fully stale */
+ function freshnessAlpha(peer: Peer): number {
+     if (!peer.presence) return 0.2;
+
+     const age = Math.floor(Date.now() / 1000) - peer.presence.timestamp;
+     const expiry = peer.presence.expiry || 3600;
+
+     if (age <= expiry) return 1.0;
+
+     // Fade over the next hour after expiry
+     const fadeWindow = 3600;
+     const fadePortion = Math.min((age - expiry) / fadeWindow, 1.0);
+     return 1.0 - fadePortion * 0.85; // fades from 1.0 to 0.15
+ }
+
 	function handleCanvasClick(event: MouseEvent | TouchEvent) {
 		if (!onpeerselect) return;
 
@@ -138,65 +153,70 @@
 		const cy = height / 2;
 		const maxScore = Math.max(...nodes.map(n => n.peer.trustScore), 1);
 
-		// Draw edges from center (you) to each peer
-		for (const node of nodes) {
-			const strength = node.peer.trustScore / maxScore;
-			if (strength < 0.05) continue;
+  // Draw edges from center (you) to each peer
+  for (const node of nodes) {
+      const strength = node.peer.trustScore / maxScore;
+      if (strength < 0.05) continue;
 
-			node.x += (node.targetX - node.x) * 0.08;
-			node.y += (node.targetY - node.y) * 0.08;
+      node.x += (node.targetX - node.x) * 0.08;
+      node.y += (node.targetY - node.y) * 0.08;
 
-			const alpha = 0.08 + strength * 0.3;
-			ctx.beginPath();
-			ctx.moveTo(cx, cy);
-			ctx.lineTo(node.x, node.y);
-			ctx.strokeStyle = `rgba(106, 173, 122, ${alpha})`;
-			ctx.lineWidth = 0.5 + strength * 2.5;
-			ctx.stroke();
-		}
+      const edgeAlpha = (0.08 + strength * 0.3) * freshnessAlpha(node.peer);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(node.x, node.y);
+      ctx.strokeStyle = `rgba(106, 173, 122, ${edgeAlpha})`;
+      ctx.lineWidth = 0.5 + strength * 2.5;
+      ctx.stroke();
+  }
 
-		// Draw peer nodes
-		for (const node of nodes) {
-			const presence = node.peer.presence;
-			const color = capacityColor(presence?.capacity);
+  // Draw peer nodes
+  for (const node of nodes) {
+      const presence = node.peer.presence;
+      const color = capacityColor(presence?.capacity);
+      const alpha = freshnessAlpha(node.peer);
 
-			// Glow for available nodes
-			if (presence?.capacity === 'available') {
-				ctx.beginPath();
-				ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
-				ctx.fillStyle = color.replace(')', ', 0.15)').replace('rgb', 'rgba');
-				ctx.fill();
-			}
+      ctx.globalAlpha = alpha;
 
-			// Node circle
-			ctx.beginPath();
-			ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-			ctx.fillStyle = color;
-			ctx.fill();
+      // Glow for available nodes
+      if (presence?.capacity === 'available') {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
+          ctx.fillStyle = color.replace(')', ', 0.15)').replace('rgb', 'rgba');
+          ctx.fill();
+      }
 
-			// Offer indicator (top right)
-			if (presence?.offers && presence.offers.length > 0) {
-				ctx.beginPath();
-				ctx.arc(node.x + node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
-				ctx.fillStyle = COLORS.offer;
-				ctx.fill();
-			}
+      // Node circle
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
 
-			// Need indicator (top left)
-			if (presence?.needs && presence.needs.length > 0) {
-				ctx.beginPath();
-				ctx.arc(node.x - node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
-				ctx.fillStyle = COLORS.need;
-				ctx.fill();
-			}
+      // Offer indicator (top right)
+      if (presence?.offers && presence.offers.length > 0) {
+          ctx.beginPath();
+          ctx.arc(node.x + node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
+          ctx.fillStyle = COLORS.offer;
+          ctx.fill();
+      }
 
-			// Name label
-			const name = node.peer.name || node.peer.pubkey.slice(0, 8) + '…';
-			ctx.font = `${Math.max(10, node.radius * 0.7)}px system-ui`;
-			ctx.fillStyle = COLORS.text;
-			ctx.textAlign = 'center';
-			ctx.fillText(name, node.x, node.y + node.radius + 14);
-		}
+      // Need indicator (top left)
+      if (presence?.needs && presence.needs.length > 0) {
+          ctx.beginPath();
+          ctx.arc(node.x - node.radius * 0.7, node.y - node.radius * 0.7, 3, 0, Math.PI * 2);
+          ctx.fillStyle = COLORS.need;
+          ctx.fill();
+      }
+
+      // Name label
+      const name = node.peer.name || node.peer.pubkey.slice(0, 8) + '…';
+      ctx.font = `${Math.max(10, node.radius * 0.7)}px system-ui`;
+      ctx.fillStyle = COLORS.text;
+      ctx.textAlign = 'center';
+      ctx.fillText(name, node.x, node.y + node.radius + 14);
+
+      ctx.globalAlpha = 1.0;
+  }
 
 		// Draw "you" node at center
 		const youRadius = 14;
