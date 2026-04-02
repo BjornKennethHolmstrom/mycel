@@ -3,7 +3,8 @@
 		"name": "mycel",
 		"tagline": "coordination substrate for living communities",
 		"connecting": "connecting…",
-		"connected": "connected"
+		"connected": "connected",
+  "publishFailed": "Couldn't reach network"
 	},
  "map": {
   "you": "you"

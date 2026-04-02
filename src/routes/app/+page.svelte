@@ -83,8 +83,8 @@
      // Auto-republish presence every 30 minutes
      republishTimer = setInterval(() => {
          if (myPresence && client) {
-             client.publishPresence(myPresence).catch(err => {
-                 console.error('Auto-republish failed:', err);
+             client.publishPresence(myPresence).catch(() => {
+                 toastMessage = $t('app.publishFailed');
              });
          }
      }, 30 * 60 * 1000);
@@ -139,9 +139,8 @@
      if (client) {
          try {
              await client.publishPresence(presence);
-             console.log('Presence published successfully');
          } catch (err) {
-             console.error('Failed to publish presence:', err);
+             toastMessage = $t('app.publishFailed');
          }
      }
  }
@@ -157,7 +156,7 @@
     selectedPeer = null;
     persistPeers();
    } catch (err) {
-    console.error('Failed to send gratitude:', err);
+       toastMessage = $t('app.publishFailed');
    }
   }
  }

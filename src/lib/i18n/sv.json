@@ -3,7 +3,8 @@
 		"name": "mycel",
 		"tagline": "koordineringssubstrat för levande samhällen",
 		"connecting": "ansluter…",
-		"connected": "ansluten"
+		"connected": "ansluten",
+  "publishFailed": "Kunde inte nå nätverket"
 	},
  "map": {
   "you": "du"
