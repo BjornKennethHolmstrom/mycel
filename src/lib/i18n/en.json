@@ -45,7 +45,12 @@
   "errorEmpty": "Please paste a public key.",
   "errorInvalid": "Not a valid 64-character hex key.",
   "errorNpub": "npub format not yet supported — please paste the hex key.",
-  "peerAdded": "{name} added"
+  "peerAdded": "{name} added",
+  "scanQR": "Scan QR code",
+  "pasteManually": "Paste key manually",
+  "scanning": "Scanning",
+  "cancelScan": "Cancel",
+  "cameraError": "Could not access camera"
  },
 	"peer": {
 		"noPresence": "No presence signal right now.",

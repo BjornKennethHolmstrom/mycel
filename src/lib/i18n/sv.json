@@ -45,7 +45,12 @@
   "errorEmpty": "Klistra in en publik nyckel.",
   "errorInvalid": "Inte en giltig 64-teckens hexnyckel.",
   "errorNpub": "npub-format stöds inte ännu — klistra in hexnyckeln.",
-  "peerAdded": "{name} tillagd"
+  "peerAdded": "{name} tillagd",
+  "scanQR": "Skanna QR-kod",
+  "pasteManually": "Klistra in nyckel manuellt",
+  "scanning": "Skannar",
+  "cancelScan": "Avbryt",
+  "cameraError": "Kunde inte komma åt kameran"
  },
 	"peer": {
 		"noPresence": "Ingen närvarosignal just nu.",
