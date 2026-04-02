@@ -21,6 +21,7 @@ export class NostrClient {
 	private relays: string[];
 	private subscriptions: Array<{ close: () => void }> = [];
  private displayName: string = '';
+ private relayStatus: Map<string, 'connected' | 'failed'> = new Map();
 
 	constructor(relays: string[] = DEFAULT_RELAYS) {
 		this.pool = new SimplePool();
@@ -53,6 +54,14 @@ export class NostrClient {
 
  loadDisplayName() {
      this.displayName = localStorage.getItem('mycel_display_name') || '';
+ }
+
+ getRelayHealth(): { connected: number; total: number; relays: Map<string, 'connected' | 'failed'> } {
+     return {
+         connected: Array.from(this.relayStatus.values()).filter(s => s === 'connected').length,
+         total: this.relays.length,
+         relays: new Map(this.relayStatus)
+     };
  }
 
  async publishPresence(presence: PresenceData): Promise<void> {
@@ -146,6 +155,7 @@ export class NostrClient {
 
              ws.onopen = () => {
                  console.log('Subscription connected to', relay);
+                 this.relayStatus.set(relay, 'connected');
                  ws.send(filter);
              };
 
@@ -175,7 +185,14 @@ export class NostrClient {
                  }
              };
 
-             ws.onerror = () => console.log('Subscription failed on', relay);
+             ws.onerror = () => {
+                 console.log('Subscription failed on', relay);
+                 this.relayStatus.set(relay, 'failed');
+             };
+
+             ws.onclose = () => {
+                 this.relayStatus.set(relay, 'failed');
+             };
 
              this.subscriptions.push({ close: () => ws.close() });
          } catch {

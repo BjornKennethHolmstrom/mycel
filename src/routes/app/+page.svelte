@@ -30,6 +30,8 @@
  let toastMessage = $state('');
  let myDisplayName = $state(localStorage.getItem('mycel_display_name') || '');
  let republishTimer: ReturnType<typeof setInterval> | null = null;
+ let relayHealth = $state({ connected: 0, total: 0 });
+ let healthTimer: ReturnType<typeof setInterval> | null = null;
 
  onMount(() => {
      if (!hasIdentity()) {
@@ -66,6 +68,16 @@
 
      // Start live relay subscriptions
      startSubscriptions();
+     // Poll relay health every 5 seconds
+     healthTimer = setInterval(() => {
+         if (client) {
+             relayHealth = client.getRelayHealth();
+         }
+     }, 5000);
+     // Initial check after 2 seconds (give connections time to establish)
+     setTimeout(() => {
+         if (client) relayHealth = client.getRelayHealth();
+     }, 2000);
      connectionStatus.set('connected');
      statusText = 'connected';
      // Auto-republish presence every 30 minutes
@@ -81,6 +93,7 @@
 
  onDestroy(() => {
      if (republishTimer) clearInterval(republishTimer);
+     if (healthTimer) clearInterval(healthTimer);
      client?.destroy();
  });
 
@@ -297,8 +310,13 @@
      <div style="display: flex; align-items: center; gap: 0.75rem;">
          <button class="add-peer-btn" onclick={() => addPeerOpen = true}>+</button>
          <LangSwitcher />
-         <span class="status" class:connected={statusText === 'connected'}>
-             {$t(`app.${statusText}`)}
+         <span class="status" class:connected={relayHealth.connected > 0}>
+             <span class="relay-dot" style="background: {
+                 relayHealth.connected === 0 ? 'var(--mycel-urgent)' :
+                 relayHealth.connected < relayHealth.total ? 'var(--mycel-node-limited)' :
+                 'var(--mycel-node-available)'
+             }"></span>
+             {relayHealth.connected}/{relayHealth.total}
          </span>
      </div>
  </header>
@@ -379,6 +397,14 @@
 		letter-spacing: 0.15em;
 		color: var(--mycel-accent-bright);
 	}
+
+ .relay-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.25rem;
+ }
 
 	.status {
 		font-size: 0.625rem;
