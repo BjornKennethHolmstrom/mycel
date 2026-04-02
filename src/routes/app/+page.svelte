@@ -294,7 +294,11 @@
  </header>
 
 	<main class="map-area">
-		<AmbientMap onpeerselect={handlePeerSelect} onselfselect={() => presenceOpen = true} />
+		<AmbientMap
+    onpeerselect={handlePeerSelect}
+    onselfselect={() => presenceOpen = true}
+    myPresence={myPresence}
+  />
 	</main>
 
 	<footer class="app-footer">

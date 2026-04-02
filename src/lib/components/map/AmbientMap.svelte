@@ -9,14 +9,15 @@
  import { t, tv } from '$lib/i18n';
 	import { onMount, onDestroy } from 'svelte';
 	import { peerList } from '$lib/stores/app';
-	import type { Peer } from '$lib/types';
+ import type { Peer, PresenceData } from '$lib/types';
 
  interface Props {
   onpeerselect?: (peer: Peer) => void;
   onselfselect?: () => void;
+  myPresence?: PresenceData | null;
  }
 
- let { onpeerselect, onselfselect }: Props = $props();
+ let { onpeerselect, onselfselect, myPresence }: Props = $props();
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
@@ -48,7 +49,10 @@
 		need: '#c47a3a',
 		you: '#6aad7a',
 		youGlow: 'rgba(106, 173, 122, 0.12)',
-		youRing: 'rgba(106, 173, 122, 0.4)'
+		youRing: 'rgba(106, 173, 122, 0.4)',
+  matchOffer: 'rgba(106, 173, 122, ',   // green — they have what you need
+  matchNeed: 'rgba(196, 122, 58, ',     // orange — you have what they need
+  matchBoth: 'rgba(180, 160, 80, '      // gold — mutual match
 	};
 
 	function capacityColor(capacity: string | undefined): string {
@@ -98,6 +102,19 @@
      const fadeWindow = 3600;
      const fadePortion = Math.min((age - expiry) / fadeWindow, 1.0);
      return 1.0 - fadePortion * 0.85; // fades from 1.0 to 0.15
+ }
+
+ /** Check if there's an offer/need match between you and a peer */
+ function hasMatch(peer: Peer): 'offer' | 'need' | 'both' | null {
+     if (!myPresence || !peer.presence) return null;
+
+     const theyOfferWeNeed = myPresence.needs.some(n => peer.presence!.offers.includes(n));
+     const weOfferTheyNeed = myPresence.offers.some(o => peer.presence!.needs.includes(o));
+
+     if (theyOfferWeNeed && weOfferTheyNeed) return 'both';
+     if (theyOfferWeNeed) return 'offer';
+     if (weOfferTheyNeed) return 'need';
+     return null;
  }
 
 	function handleCanvasClick(event: MouseEvent | TouchEvent) {
@@ -154,6 +171,7 @@
 		const maxScore = Math.max(...nodes.map(n => n.peer.trustScore), 1);
 
   // Draw edges from center (you) to each peer
+  const now = performance.now();
   for (const node of nodes) {
       const strength = node.peer.trustScore / maxScore;
       if (strength < 0.05) continue;
@@ -161,13 +179,33 @@
       node.x += (node.targetX - node.x) * 0.08;
       node.y += (node.targetY - node.y) * 0.08;
 
-      const edgeAlpha = (0.08 + strength * 0.3) * freshnessAlpha(node.peer);
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(node.x, node.y);
-      ctx.strokeStyle = `rgba(106, 173, 122, ${edgeAlpha})`;
-      ctx.lineWidth = 0.5 + strength * 2.5;
-      ctx.stroke();
+      const freshness = freshnessAlpha(node.peer);
+      const match = hasMatch(node.peer);
+
+      if (match) {
+          // Matched edge: colored with gentle pulse
+          const pulse = 0.5 + 0.5 * Math.sin(now / 600);
+          const baseAlpha = (0.2 + strength * 0.4 + pulse * 0.15) * freshness;
+          const colorBase = match === 'offer' ? COLORS.matchOffer
+              : match === 'need' ? COLORS.matchNeed
+              : COLORS.matchBoth;
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(node.x, node.y);
+          ctx.strokeStyle = colorBase + baseAlpha + ')';
+          ctx.lineWidth = 1 + strength * 3;
+          ctx.stroke();
+      } else {
+          // Normal edge
+          const edgeAlpha = (0.08 + strength * 0.3) * freshness;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(node.x, node.y);
+          ctx.strokeStyle = `rgba(106, 173, 122, ${edgeAlpha})`;
+          ctx.lineWidth = 0.5 + strength * 2.5;
+          ctx.stroke();
+      }
   }
 
   // Draw peer nodes
