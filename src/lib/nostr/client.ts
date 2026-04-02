@@ -143,61 +143,82 @@ export class NostrClient {
      if (pubkeys.length === 0) return null;
 
      const now = Math.floor(Date.now() / 1000);
-     const filter = JSON.stringify(["REQ", "mycel-presence", {
-         kinds: [EVENT_KINDS.PRESENCE],
-         authors: pubkeys,
-         since: now - 7200
-     }]);
 
      for (const relay of this.relays) {
-         try {
-             const ws = new WebSocket(relay);
+         const connect = () => {
+             try {
+                 const ws = new WebSocket(relay);
+                 let closed = false;
 
-             ws.onopen = () => {
-                 console.log('Subscription connected to', relay);
-                 this.relayStatus.set(relay, 'connected');
-                 ws.send(filter);
-             };
+                 ws.onopen = () => {
+                     console.log('Subscription connected to', relay);
+                     this.relayStatus.set(relay, 'connected');
+                     const filter = JSON.stringify(["REQ", "mycel-presence-" + relay.slice(6, 14), {
+                         kinds: [EVENT_KINDS.PRESENCE],
+                         authors: pubkeys,
+                         since: Math.floor(Date.now() / 1000) - 7200
+                     }]);
+                     ws.send(filter);
+                 };
 
-             ws.onmessage = (e) => {
-                 try {
-                     const msg = JSON.parse(e.data);
-                     if (msg[0] !== 'EVENT') return;
+                 ws.onmessage = (e) => {
+                     try {
+                         const msg = JSON.parse(e.data);
+                         if (msg[0] !== 'EVENT') return;
 
-                     const event = msg[2];
-                     const data = JSON.parse(event.content);
-                     if (data.mycel_type !== 'presence') return;
+                         const event = msg[2];
+                         const data = JSON.parse(event.content);
+                         if (data.mycel_type !== 'presence') return;
 
-                     const presence: PresenceData = {
-                         capacity: data.capacity,
-                         offers: data.offers || [],
-                         needs: data.needs || [],
-                         mood: data.mood,
-                         locationHash: data.location_hash,
-                         expiry: Number(event.tags.find((t: string[]) => t[0] === 'expiry')?.[1] || 3600),
-                         timestamp: event.created_at
-                     };
+                         const presence: PresenceData = {
+                             capacity: data.capacity,
+                             offers: data.offers || [],
+                             needs: data.needs || [],
+                             mood: data.mood,
+                             locationHash: data.location_hash,
+                             expiry: Number(event.tags.find((t: string[]) => t[0] === 'expiry')?.[1] || 3600),
+                             timestamp: event.created_at
+                         };
 
-                     console.log('Presence received from', event.pubkey.slice(0, 8), 'via', relay);             
-                     onEvent(event.pubkey, presence, data.name || '');
-                 } catch {
-                     // skip
-                 }
-             };
+                         console.log('Presence received from', event.pubkey.slice(0, 8), 'via', relay);
+                         onEvent(event.pubkey, presence, data.name || '');
+                     } catch {
+                         // skip malformed
+                     }
+                 };
 
-             ws.onerror = () => {
-                 console.log('Subscription failed on', relay);
+                 ws.onerror = () => {
+                     console.log('Subscription failed on', relay);
+                     this.relayStatus.set(relay, 'failed');
+                 };
+
+                 ws.onclose = () => {
+                     this.relayStatus.set(relay, 'failed');
+                     if (!closed) {
+                         // Reconnect with exponential backoff
+                         const delay = 5000 + Math.random() * 5000;
+                         console.log(`Reconnecting to ${relay} in ${Math.round(delay / 1000)}s`);
+                         setTimeout(() => {
+                             if (!closed) connect();
+                         }, delay);
+                     }
+                 };
+
+                 this.subscriptions.push({
+                     close: () => {
+                         closed = true;
+                         ws.close();
+                     }
+                 });
+             } catch {
+                 console.log('Could not connect to', relay);
                  this.relayStatus.set(relay, 'failed');
-             };
+                 // Retry after delay
+                 setTimeout(connect, 10000);
+             }
+         };
 
-             ws.onclose = () => {
-                 this.relayStatus.set(relay, 'failed');
-             };
-
-             this.subscriptions.push({ close: () => ws.close() });
-         } catch {
-             console.log('Could not connect to', relay);
-         }
+         connect();
      }
 
      return this.subscriptions[this.subscriptions.length - 1];
