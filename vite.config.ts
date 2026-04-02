@@ -3,11 +3,14 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [
-		tailwindcss(),
-		sveltekit()
-	],
-	optimizeDeps: {
-		exclude: ['sql.js']
-	}
+    plugins: [
+        tailwindcss(),
+        sveltekit()
+    ],
+    define: {
+        '__BUILD_HASH__': JSON.stringify(Date.now().toString(36))
+    },
+    optimizeDeps: {
+        exclude: ['sql.js']
+    }
 });

@@ -6,6 +6,7 @@
 	Renders on Canvas for performance.
 -->
 <script lang="ts">
+ import { get } from 'svelte/store';
  import { t, tv } from '$lib/i18n';
 	import { onMount, onDestroy } from 'svelte';
 	import { peerList } from '$lib/stores/app';
@@ -279,6 +280,15 @@
 		ctx.fillStyle = COLORS.textDim;
 		ctx.textAlign = 'center';
 		ctx.fillText($t('map.you'), cx, cy + youRadius + 14);
+
+  // Empty state hint
+  if (nodes.length === 0) {
+      const translate = get(t);
+      ctx.font = '12px system-ui';
+      ctx.fillStyle = COLORS.textDim;
+      ctx.textAlign = 'center';
+      ctx.fillText(translate('app.emptyHint'), cx, cy + youRadius + 40);
+  }
 
   // Tap pulse effect
   if (tappedNode) {

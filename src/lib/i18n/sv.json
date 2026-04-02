@@ -4,7 +4,8 @@
 		"tagline": "koordineringssubstrat för levande samhällen",
 		"connecting": "ansluter…",
 		"connected": "ansluten",
-  "publishFailed": "Kunde inte nå nätverket"
+  "publishFailed": "Kunde inte nå nätverket",
+  "emptyHint": "tryck + för att lägga till någon i närheten"
 	},
  "map": {
   "you": "du"

@@ -49,21 +49,17 @@
      client.loadDisplayName();
      connectionStatus.set('connecting');
 
-     // Load persisted peers, or create demo data on first run
+     // Load persisted peers
      const savedPeers = loadPeers();
-     if (savedPeers.length > 0) {
-         for (const saved of savedPeers) {
-             const score = trustStore.score(saved.pubkey);
-             updatePeer(saved.pubkey, {
-                 name: saved.name,
-                 nip05: saved.nip05,
-                 lastSeen: saved.lastSeen,
-                 presence: saved.presence,
-                 trustScore: score
-             });
-         }
-     } else {
-         addDemoPeers();
+     for (const saved of savedPeers) {
+         const score = trustStore.score(saved.pubkey);
+         updatePeer(saved.pubkey, {
+             name: saved.name,
+             nip05: saved.nip05,
+             lastSeen: saved.lastSeen,
+             presence: saved.presence,
+             trustScore: score
+         });
      }
 
      // Start live relay subscriptions
@@ -223,20 +219,6 @@
          persistPeers();
      });
 
-     // Debug: also subscribe to ALL events from these pubkeys to see if anything comes through
-     client.pool_debug.subscribeMany(
-         ['wss://nos.lol', 'wss://relay.snort.social'],
-         [{ authors: peerPubkeys, limit: 5 }],
-         {
-             onevent(event) {
-                 console.log('Raw event from peer: kind=' + event.kind + ' pubkey=' + event.pubkey.slice(0, 8));
-             },
-             oneose() {
-                 console.log('End of stored events from relays');
-             }
-         }
-     );
-
      // Subscribe to gratitude directed at us
      let myPk = '';
      currentPubkey.subscribe((v) => { myPk = v; })();
@@ -247,60 +229,7 @@
          const peer = getPeer(from);
          toastMessage = $t('peer.gratitudeSent', { name: peer?.name || from.slice(0, 8) });
      });
-
-     // Debug: direct websocket subscription bypassing SimplePool
-     const debugWs = new WebSocket('wss://relay.snort.social');
-     debugWs.onopen = () => {
-         const now = Math.floor(Date.now() / 1000);
-         debugWs.send(JSON.stringify(["REQ", "debug-direct", {
-             kinds: [30078],
-             authors: peerPubkeys,
-             since: now - 7200
-         }]));
-         console.log('Debug: sent direct subscription to relay.snort.social');
-     };
-     debugWs.onmessage = (e) => {
-         const data = JSON.parse(e.data);
-         if (data[0] === 'EVENT') {
-             console.log('Debug: DIRECT got event from ' + data[2].pubkey.slice(0, 8));
-         } else {
-             console.log('Debug: DIRECT ' + JSON.stringify(data));
-         }
-     };
  }
-
-	/** Demo data for development — remove when real peers exist */
-	function addDemoPeers() {
-		const demoNames = ['anna', 'erik', 'fatima', 'jun', 'maria', 'lars', 'sara'];
-		const allOffers = ['tools', 'food', 'transport', 'seeds', 'firewood', 'company', 'conversation'];
-		const allNeeds = ['firewood', 'childcare', 'transport', 'meal-together', 'skills', 'company'];
-
-		for (const name of demoNames) {
-			const fakePubkey = name.padEnd(64, '0');
-
-			const interactions = Math.floor(Math.random() * 8) + 1;
-			for (let i = 0; i < interactions; i++) {
-				const types = ['gratitude_sent', 'dm_exchange', 'presence_overlap', 'offer_acted'] as const;
-				trustStore.record(fakePubkey, types[Math.floor(Math.random() * types.length)]);
-			}
-
-			const score = trustStore.score(fakePubkey);
-	 	const capacities = ['available', 'limited', 'unavailable'] as const;
-
-			updatePeer(fakePubkey, {
-				name,
-				trustScore: score,
-				presence: {
-					capacity: capacities[Math.floor(Math.random() * 3)],
-					offers: allOffers.slice(0, Math.floor(Math.random() * 4)),
-					needs: allNeeds.slice(0, Math.floor(Math.random() * 3)),
-					mood: (['calm', 'stretched', 'urgent'] as const)[Math.floor(Math.random() * 3)],
-					expiry: 3600,
-					timestamp: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 3600)
-				}
-			});
-		}
-	}
 </script>
 
 <div class="app-container">

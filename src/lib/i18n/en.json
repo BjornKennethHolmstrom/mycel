@@ -4,7 +4,8 @@
 		"tagline": "coordination substrate for living communities",
 		"connecting": "connecting…",
 		"connected": "connected",
-  "publishFailed": "Couldn't reach network"
+  "publishFailed": "Couldn't reach network",
+  "emptyHint": "tap + to add someone nearby"
 	},
  "map": {
   "you": "you"
