@@ -24,6 +24,9 @@
 	let width = 0;
 	let height = 0;
 
+ let tappedNode: NodePosition | null = null;
+ let tapTime = 0;
+
 	interface NodePosition {
 		peer: Peer;
 		x: number;
@@ -105,23 +108,26 @@
   const cy = height / 2;
   const dx = x - cx;
   const dy = y - cy;
-  if (dx * dx + dy * dy <= 26 * 26) { // youRadius + padding
+  if (dx * dx + dy * dy <= 26 * 26) {
+      tappedNode = { x: cx, y: cy, radius: 14 } as any;
+      tapTime = performance.now();
       onselfselect?.();
       return;
   }
 
 		// Check hit on nodes (reverse order so top-drawn nodes get priority)
-		for (let i = nodes.length - 1; i >= 0; i--) {
-			const node = nodes[i];
-			const dx = x - node.x;
-			const dy = y - node.y;
-			// Generous tap target: node radius + 8px padding
-			const hitRadius = node.radius + 8;
-			if (dx * dx + dy * dy <= hitRadius * hitRadius) {
-				onpeerselect(node.peer);
-				return;
-			}
-		}
+  for (let i = nodes.length - 1; i >= 0; i--) {
+      const node = nodes[i];
+      const dx = x - node.x;
+      const dy = y - node.y;
+      const hitRadius = node.radius + 8;
+      if (dx * dx + dy * dy <= hitRadius * hitRadius) {
+          tappedNode = node;
+          tapTime = performance.now();
+          onpeerselect?.(node.peer);
+          return;
+      }
+  }
 	}
 
 	function animate() {
@@ -215,6 +221,24 @@
 		ctx.fillStyle = COLORS.textDim;
 		ctx.textAlign = 'center';
 		ctx.fillText($t('map.you'), cx, cy + youRadius + 14);
+
+  // Tap pulse effect
+  if (tappedNode) {
+      const elapsed = performance.now() - tapTime;
+      const duration = 400;
+      if (elapsed < duration) {
+          const progress = elapsed / duration;
+          const pulseRadius = tappedNode.radius + 20 * progress;
+          const alpha = 0.4 * (1 - progress);
+          ctx.beginPath();
+          ctx.arc(tappedNode.x, tappedNode.y, pulseRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(106, 173, 122, ${alpha})`;
+          ctx.lineWidth = 2 * (1 - progress);
+          ctx.stroke();
+      } else {
+          tappedNode = null;
+      }
+  }
 
 		animationFrame = requestAnimationFrame(animate);
 	}
