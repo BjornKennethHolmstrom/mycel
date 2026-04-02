@@ -7,6 +7,8 @@
 	import { t } from '$lib/i18n';
 	import { currentPubkey } from '$lib/stores/app';
 	import { onDestroy } from 'svelte';
+ import qrcode from 'qrcode-generator';
+ import jsQR from 'jsqr';
 
 	interface Props {
 		open: boolean;
@@ -88,47 +90,32 @@
 		generateQRToCanvas(ctx, data, size);
 	}
 
-	function generateQRToCanvas(ctx: CanvasRenderingContext2D, data: string, size: number) {
-		// Use the QR generation from the global scope (loaded via CDN)
-		// @ts-ignore
-		if (typeof globalThis.QRCode !== 'undefined') {
-			// @ts-ignore
-			const qr = new globalThis.QRCode(0, 'L');
-			qr.addData(data);
-			qr.make();
+ function generateQRToCanvas(ctx: CanvasRenderingContext2D, data: string, size: number) {
+     const qr = qrcode(0, 'L');
+     qr.addData(data);
+     qr.make();
 
-			const modules = qr.getModuleCount();
-			const cellSize = size / (modules + 8); // padding
-			const offset = (size - modules * cellSize) / 2;
+     const modules = qr.getModuleCount();
+     const cellSize = size / (modules + 8);
+     const offset = (size - modules * cellSize) / 2;
 
-			ctx.fillStyle = '#0a0f0a';
-			ctx.fillRect(0, 0, size, size);
+     ctx.fillStyle = '#0a0f0a';
+     ctx.fillRect(0, 0, size, size);
 
-			ctx.fillStyle = '#6aad7a';
-			for (let r = 0; r < modules; r++) {
-				for (let c = 0; c < modules; c++) {
-					if (qr.isDark(r, c)) {
-						ctx.fillRect(
-							offset + c * cellSize,
-							offset + r * cellSize,
-							cellSize,
-							cellSize
-						);
-					}
-				}
-			}
-		} else {
-			// Fallback: show the key as text if QR library isn't loaded
-			ctx.fillStyle = '#0a0f0a';
-			ctx.fillRect(0, 0, size, size);
-			ctx.fillStyle = '#6aad7a';
-			ctx.font = '10px monospace';
-			ctx.textAlign = 'center';
-			ctx.fillText('QR library loading...', size / 2, size / 2 - 5);
-			ctx.fillText(data.slice(0, 32), size / 2, size / 2 + 10);
-			ctx.fillText(data.slice(32), size / 2, size / 2 + 22);
-		}
-	}
+     ctx.fillStyle = '#6aad7a';
+     for (let r = 0; r < modules; r++) {
+         for (let c = 0; c < modules; c++) {
+             if (qr.isDark(r, c)) {
+                 ctx.fillRect(
+                     offset + c * cellSize,
+                     offset + r * cellSize,
+                     cellSize,
+                     cellSize
+                 );
+             }
+         }
+     }
+ }
 
 	// === QR Scanning ===
 
@@ -167,22 +154,18 @@
 				const scanCanvas = document.createElement('canvas');
 				const scanCtx = scanCanvas.getContext('2d')!;
 
-				scanInterval = setInterval(() => {
-					if (!videoEl || videoEl.readyState < 2) return;
-					scanCanvas.width = videoEl.videoWidth;
-					scanCanvas.height = videoEl.videoHeight;
-					scanCtx.drawImage(videoEl, 0, 0);
-					const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    scanInterval = setInterval(() => {
+        if (!videoEl || videoEl.readyState < 2) return;
+        scanCanvas.width = videoEl.videoWidth;
+        scanCanvas.height = videoEl.videoHeight;
+        scanCtx.drawImage(videoEl, 0, 0);
+        const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
 
-					// @ts-ignore
-					if (typeof globalThis.jsQR !== 'undefined') {
-						// @ts-ignore
-						const code = globalThis.jsQR(imageData.data, imageData.width, imageData.height);
-						if (code) {
-							handleScannedValue(code.data);
-						}
-					}
-				}, 300);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+            handleScannedValue(code.data);
+        }
+    }, 300);
 			}
 		} catch (err) {
 			error = $t('addPeer.cameraError');
@@ -211,11 +194,6 @@
 		scanning = false;
 	}
 </script>
-
-<svelte:head>
-	<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-</svelte:head>
 
 {#if open}
 	<button class="backdrop" onclick={onclose} aria-label="Close panel"></button>
