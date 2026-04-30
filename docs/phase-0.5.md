@@ -20,6 +20,7 @@ Testers will need to:
 - [ ] **Set display name** — currently only in the presence panel; a settings page makes it more discoverable
 - [ ] **Reset identity** — start fresh if something breaks; confirm dialog, clears all localStorage
 - [ ] **Clear peers** — nuclear option for debugging; removes all peers and trust without resetting identity
+- [ ] **Link to the app** — for easy sharing
 
 Minimal implementation: a gear icon in the header, opens a simple page/panel.
 

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mycel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --soil: #1a1510;
+            --humus: #2d2419;
+            --mycel: #c8a96e;
+            --spore: #e8d5a3;
+            --moss: #7a9e7e;
+            --root: #8b6f4e;
+            --mist: #d4c9b0;
+            --glow: rgba(200, 169, 110, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--soil);
+            color: var(--mist);
+            font-family: 'Lora', Georgia, serif;
+            min-height: 100vh;
+            padding: 0.9rem 1.8rem;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 20% 80%, rgba(122, 158, 126, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(200, 169, 110, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .page {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 0.6rem;
+            animation: fadeUp 0.8s ease both;
+        }
+
+        .title {
+            font-family: 'Lora', serif;
+            font-size: clamp(2rem, 5.5vw, 3.2rem);
+            font-weight: 600;
+            color: var(--mycel);
+            letter-spacing: 0.07em;
+            line-height: 1;
+            margin-bottom: 0.12rem;
+        }
+
+        .subtitle {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 300;
+            color: var(--root);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        .section {
+            margin-bottom: 0.55rem;
+            animation: fadeUp 0.8s ease both;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.08s; }
+        .section:nth-child(3) { animation-delay: 0.16s; }
+        .section:nth-child(4) { animation-delay: 0.24s; }
+        .section:nth-child(5) { animation-delay: 0.32s; }
+        .section:nth-child(6) { animation-delay: 0.4s; }
+
+        .section-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.58rem;
+            font-weight: 400;
+            color: var(--moss);
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(122, 158, 126, 0.3), transparent);
+        }
+
+        .section p {
+            font-size: 0.8rem;
+            line-height: 1.45;
+            color: var(--mist);
+        }
+
+        .section p + p {
+            margin-top: 0.3rem;
+        }
+
+        em {
+            color: var(--spore);
+            font-style: italic;
+        }
+
+        strong {
+            color: var(--mycel);
+            font-weight: 600;
+        }
+
+        .shovel {
+            border-left: 2px solid var(--moss);
+            padding: 0.35rem 1rem;
+            background: rgba(122, 158, 126, 0.06);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.84rem;
+            font-style: italic;
+            color: var(--spore);
+            line-height: 1.4;
+        }
+
+        .diagram {
+            margin: 0.5rem 0;
+            padding: 0.65rem 1rem;
+            background: var(--humus);
+            border-radius: 10px;
+            border: 1px solid rgba(200, 169, 110, 0.12);
+        }
+
+        .diagram-title {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.58rem;
+            color: var(--root);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 0.45rem;
+        }
+
+        .layers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.32rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .layer {
+            border-radius: 7px;
+            padding: 0.38rem 0.7rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .layer-ambient {
+            background: rgba(122, 158, 126, 0.1);
+            border: 1px solid rgba(122, 158, 126, 0.25);
+        }
+
+        .layer-active {
+            background: rgba(200, 169, 110, 0.08);
+            border: 1px solid rgba(200, 169, 110, 0.2);
+        }
+
+        .layer-icon {
+            font-size: 1.05rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 0.05rem;
+        }
+
+        .layer-name {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.62rem;
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 0.08rem;
+        }
+
+        .layer-ambient .layer-name { color: var(--moss); }
+        .layer-active .layer-name { color: var(--mycel); }
+
+        .layer-desc {
+            font-size: 0.72rem;
+            line-height: 1.35;
+            color: var(--mist);
+            opacity: 0.85;
+        }
+
+        .growth {
+            border-top: 1px solid rgba(200, 169, 110, 0.1);
+            padding-top: 0.45rem;
+        }
+
+        .growth-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.56rem;
+            color: var(--root);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 0.4rem;
+        }
+
+        .nodes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .node-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .node {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            position: relative;
+            transition: transform 0.3s ease;
+            cursor: default;
+        }
+
+        .node:hover { transform: scale(1.15); }
+
+        .node-strong {
+            background: rgba(200, 169, 110, 0.2);
+            border: 2px solid var(--mycel);
+            box-shadow: 0 0 10px rgba(200, 169, 110, 0.2);
+        }
+
+        .node-medium {
+            background: rgba(122, 158, 126, 0.15);
+            border: 2px solid rgba(122, 158, 126, 0.5);
+        }
+
+        .node-faint {
+            background: rgba(139, 111, 78, 0.1);
+            border: 1.5px solid rgba(139, 111, 78, 0.3);
+        }
+
+        .node-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.5rem;
+            color: var(--root);
+            letter-spacing: 0.08em;
+        }
+
+        .connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 0.25rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .line-strong {
+            width: 30px;
+            height: 2.5px;
+            background: linear-gradient(to right, var(--mycel), rgba(200, 169, 110, 0.4));
+            border-radius: 2px;
+            margin-bottom: 0.12rem;
+        }
+
+        .line-medium {
+            width: 22px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(122, 158, 126, 0.6), rgba(122, 158, 126, 0.2));
+            border-radius: 2px;
+            margin-bottom: 0.12rem;
+        }
+
+        .line-faint {
+            width: 16px;
+            height: 1px;
+            background: rgba(139, 111, 78, 0.3);
+            margin-bottom: 0.12rem;
+        }
+
+        .conn-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.48rem;
+            color: var(--root);
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 0.45rem;
+            text-align: center;
+            animation: fadeUp 0.8s ease 0.48s both;
+        }
+
+        .footer-text {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--root);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem 1rem; }
+            .page { max-width: 100%; }
+            .nodes { gap: 0.15rem; }
+            .connector { padding: 0 0.06rem; margin-bottom: 0.4rem; }
+            .line-strong, .line-medium, .line-faint { width: 16px; }
+            .node { width: 28px; height: 28px; font-size: 0.75rem; }
+            .node-label { font-size: 0.45rem; }
+            .section p { font-size: 0.74rem; line-height: 1.4; }
+            .shovel { font-size: 0.76rem; padding: 0.3rem 0.8rem; }
+            .layer-desc { font-size: 0.68rem; }
+            .diagram { padding: 0.5rem 0.7rem; }
+        }
+
+        @media (min-height: 900px) {
+            body { padding-top: 2rem; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <header class="header">
+            <div class="title">Mycel</div>
+            <div class="subtitle">koordinering som växer som en skog</div>
+        </header>
+
+        <section class="section">
+            <div class="section-label">frågan</div>
+            <p>Tänk om en liten grupp människor kunde samordna vardagslivet — verktyg, mat, en stormvarning — med en tyst app som sedan <em>spred sig på egen hand</em> till samhällen de aldrig träffat, helt enkelt för att den var användbar?</p>
+        </section>
+
+        <section class="section">
+            <div class="section-label">metaforen</div>
+            <p>Under varje skog finns ett mycelnätverk — ingen central, ingen chef, ingen server. Det leder näring från träd med överskott till träd i behov, läker sig självt när det skadas och har upprätthållit planetär motståndskraft i hundratals miljoner år.</p>
+            <p>Mycel fungerar på samma sätt: kopplingar stärks där verkligt utbyte sker, försvagas där det inte gör det, och fortsätter att fungera lokalt när internet går ner. <strong>Skogen behöver inget tillstånd för att växa.</strong></p>
+        </section>
+
+        <section class="section">
+            <div class="section-label">levande om sex månader</div>
+            <p>En liten grupp människor som känner varandra använder den första versionen. De kan se en mjuk karta över vilka som finns i närheten och vad de behöver. De samordnar något verkligt — verktyg, en måltid, en reaktion på ett problem. Appen kliver åt sidan efteråt. Den drar inte tillbaka dem. Den väntar helt enkelt, som jord, tills något behöver växa genom den igen. Någon visar den för folk de känner på annan ort. Den sprids, en betrodd koppling i taget.</p>
+        </section>
+
+        <section class="section">
+            <div class="section-label">antiberoendetestet</div>
+            <div class="shovel">Målet är ett verktyg som människor tar upp när de behöver det och lägger ner utan svårighet — som en bra spade.</div>
+        </section>
+
+        <section class="section">
+            <div class="section-label">hur det fungerar</div>
+
+            <div class="diagram">
+                <div class="diagram-title">Signalering i två hastigheter</div>
+
+                <div class="layers">
+                    <div class="layer layer-ambient">
+                        <div class="layer-icon">🌿</div>
+                        <div class="layer-content">
+                            <div class="layer-name">Omgivningslager — långsamt</div>
+                            <div class="layer-desc">En levande karta över närvaro, tillgängliga resurser, stämningen i grannskapet. Inget flöde. Ingen brådska. Uppdateras varsamt, lokalt. Som att veta hur dina grannar har det utan ständig kontakt.</div>
+                        </div>
+                    </div>
+                    <div class="layer layer-active">
+                        <div class="layer-icon">⚡</div>
+                        <div class="layer-content">
+                            <div class="layer-name">Aktivt lager — snabbt</div>
+                            <div class="layer-desc">Krypterad direktsamordning — ett behov, ett erbjudande, en krissignal. Dyker upp när något faktiskt kräver handling. Försvinner när det är klart.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="growth">
+                    <div class="growth-label">Organisk tillväxt — kopplingar stärks där värde flödar</div>
+                    <div class="nodes">
+                        <div class="node-group">
+                            <div class="node node-strong">🏠</div>
+                            <div class="node-label">du</div>
+                        </div>
+                        <div class="connector">
+                            <div class="line-strong"></div>
+                            <div class="conn-label">ofta</div>
+                        </div>
+                        <div class="node-group">
+                            <div class="node node-strong">🌱</div>
+                            <div class="node-label">granne</div>
+                        </div>
+                        <div class="connector">
+                            <div class="line-medium"></div>
+                            <div class="conn-label">ibland</div>
+                        </div>
+                        <div class="node-group">
+                            <div class="node node-medium">🛖</div>
+                            <div class="node-label">by</div>
+                        </div>
+                        <div class="connector">
+                            <div class="line-faint"></div>
+                            <div class="conn-label">sällan</div>
+                        </div>
+                        <div class="node-group">
+                            <div class="node node-faint">🌍</div>
+                            <div class="node-label">bioregion</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" style="text-align:center; animation-delay: 0.5s;">
+            <div class="section-label">prova det</div>
+            <div id="qr-code" style="margin:0.25rem auto 0.2rem; display:inline-block; padding:6px; background:#1a1510; border-radius:8px; border:1px solid rgba(200,169,110,0.2);"></div>
+            <div style="font-family:'DM Mono',monospace; font-size:0.6rem; color:var(--root); letter-spacing:0.12em; opacity:0.75; margin-top:0.15rem;">
+                bjornkennethholmstrom.github.io/mycel
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-text">Global Governance Frameworks &nbsp;·&nbsp; Björn K. Holmström &nbsp;·&nbsp; 2026</div>
+        </footer>
+
+        <script>
+            (function() {
+                const url = 'https://bjornkennethholmstrom.github.io/mycel/';
+                const div = document.getElementById('qr-code');
+                const encoded = encodeURIComponent(url);
+                const img = document.createElement('img');
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encoded +
+                    '&color=c8a96e&bgcolor=1a1510&margin=2';
+                img.width = 200;
+                img.height = 200;
+                img.alt = 'QR-kod';
+                img.style.borderRadius = '4px';
+                img.style.display = 'block';
+                div.appendChild(img);
+            })();
+        </script>
+
+    </div>
+</body>
+</html>
